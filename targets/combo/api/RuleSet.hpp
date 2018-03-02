@@ -2,9 +2,6 @@
 #define RULESET_HPP_
 
 #include <vector>
-#include <p4dev.h>
-#include <p4dev_types.h>
-#include <p4rule.h>
 
 namespace p4 {
 	class Table;

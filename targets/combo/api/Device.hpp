@@ -3,9 +3,6 @@
 
 #include <cstring>
 #include <unordered_map>
-#include <p4dev.h>
-#include <p4dev_types.h>
-#include <p4rule.h>
 #include "RuleSet.hpp"
 #include "Table.hpp"
 

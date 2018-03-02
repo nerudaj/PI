@@ -3,6 +3,9 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <p4dev.h>
+#include <p4dev_types.h>
+#include <p4rule.h>
 
 namespace p4 {
 	// Following constant has to be zero until proper invalidate method is imposed
