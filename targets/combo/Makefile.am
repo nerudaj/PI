@@ -10,6 +10,9 @@ pi_tables_imp.cpp \
 pi_act_prof_imp.cpp \
 pi_counter_imp.cpp \
 pi_meter_imp.cpp \
-pi_learn_imp.cpp
+pi_learn_imp.cpp \
+api/Device.cpp \
+api/Table.cpp \
+api/RuleSet.cpp
 
 lib_LTLIBRARIES = libpi_combo.la
