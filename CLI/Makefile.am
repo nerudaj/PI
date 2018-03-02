@@ -66,6 +66,7 @@ endif
 bin_PROGRAMS += pi_CLI_combo
 
 pi_CLI_combo_LDADD = $(common_libs) \
+-L$(top_builddir)/targets/combo/dummy -lp4dev-d \
 $(top_builddir)/targets/combo/libpi_combo.la 
 
 pi_CLI_combo_SOURCES =
