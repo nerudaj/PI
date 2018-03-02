@@ -8,6 +8,10 @@ if WITH_INTERNAL_RPC
 MAYBE_RPC = rpc
 endif
 
-SUBDIRS = dummy $(MAYBE_RPC) $(MAYBE_BMV2)
+if WITH_COMBO
+MAYBE_COMBO = combo
+endif
+
+SUBDIRS = dummy $(MAYBE_RPC) $(MAYBE_BMV2) $(MAYBE_COMBO)
 
 DIST_SUBDIRS = dummy rpc $(MAYBE_BMV2)

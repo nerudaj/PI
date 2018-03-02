@@ -61,3 +61,15 @@ pi_CLI_bmv2_SOURCES =
 # Dummy C++ source to cause C++ linking.
 nodist_EXTRA_pi_CLI_bmv2_SOURCES = dummy.cxx
 endif
+
+if WITH_COMBO
+	bin_PROGRAMS += pi_CLI_combo
+	
+	pi_CLI_combo_LDADD = $(common_libs) \
+	$(top_builddir)/targets/bmv2/libpi_combo.la 
+	
+	pi_CLI_combo_SOURCES =
+	# Dummy C++ source to cause C++ linking.
+	nodist_EXTRA_pi_CLI_combo_SOURCES = dummy.cxx
+endif
+endif
