@@ -191,6 +191,7 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  targets/Makefile
                  targets/dummy/Makefile
+                 targets/combo/Makefile
                  targets/rpc/Makefile
                  tests/Makefile
                  tests/CLI/Makefile
