@@ -21,7 +21,7 @@ bool Table::keysMatch(const p4key_elem_t* first, const p4key_elem_t* second) {
 	return comparators[type](first, second);
 }
 
-uint32_t Table::insertRule(p4rule_t *rule) {
+uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index) {
 	#ifdef DEBUG_LOGS
 	std::cout << "Table::insertRule(...)\n";
 	#endif

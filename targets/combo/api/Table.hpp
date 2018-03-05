@@ -32,7 +32,7 @@ namespace p4 {
 		 *  \details Inserted rule has to have matching table name and search 
 		 *  engine as the table you're inserting it into.
 		 */
-		uint32_t insertRule(p4rule_t *rule);
+		uint32_t insertRule(p4rule_t *rule, uint32_t &index);
 		
 		/**
 		 *  \brief Brief description
