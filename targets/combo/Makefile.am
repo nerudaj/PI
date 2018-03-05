@@ -2,7 +2,8 @@
 AM_CPPFLAGS = \
 -I$(top_srcdir)/include \
 -I$(top_srcdir)/lib \
--std=c++11
+-std=c++11 \
+-DDEBUG_LOGS
 
 libpi_combo_la_SOURCES = \
 pi_imp.cpp \
@@ -13,6 +14,7 @@ pi_meter_imp.cpp \
 pi_learn_imp.cpp \
 api/Device.cpp \
 api/Table.cpp \
-api/RuleSet.cpp
+api/RuleSet.cpp \
+devices.cpp 
 
 lib_LTLIBRARIES = libpi_combo.la
