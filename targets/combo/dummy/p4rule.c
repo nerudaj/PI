@@ -27,6 +27,12 @@ API void p4rule_mark_default(p4rule_t* rule) {
 API uint32_t p4rule_add_key_element(p4rule_t * rule, p4key_elem_t * key) {
 	assert(rule != NULL);
 	assert(key != NULL);
+	fprintf(stderr, "P4RULE_ADD_KEY_ELEM: %p %p\n", rule, key);
+	
+	if (rule->key == NULL) {
+		rule->key = key;
+		return P4DEV_OK;
+	}
 	
 	p4key_elem_t *lastValid = rule->key;
 	while (lastValid->next != NULL) lastValid = lastValid->next;
@@ -105,6 +111,9 @@ API void p4param_free(p4param_t * param) {
 
 API p4key_elem_t * tcam_p4key_create(const char * name, uint32_t size, uint8_t * value, uint8_t * mask) {
 	p4key_elem_t *result = (p4key_elem_t*)(malloc(sizeof(p4key_elem_t)));
+	if (result == NULL) {
+		return NULL;
+	}
 	
 	result->name = NULL;
 	result->value = NULL;
@@ -125,6 +134,9 @@ API bool tcam_p4key_cmp(const p4key_elem_t* key1,const p4key_elem_t* key2) {
 
 API p4key_elem_t * cuckoo_p4key_create(const char * name, uint32_t size, uint8_t * value) {
 	p4key_elem_t *result = (p4key_elem_t*)(malloc(sizeof(p4key_elem_t)));
+	if (result == NULL) {
+		return NULL;
+	}
 	
 	result->name = NULL;
 	result->value = NULL;
@@ -145,8 +157,11 @@ API bool cuckoo_p4key_cmp(const p4key_elem_t* key1,const p4key_elem_t* key2) {
 
 API p4key_elem_t * bstlpm_p4key_create(const char * name, uint32_t size, uint8_t * value, uint32_t prefix_len) {
 	p4key_elem_t *result = (p4key_elem_t*)(malloc(sizeof(p4key_elem_t)));
+	if (result == NULL) {
+		return NULL;
+	}
 	
-	result->name = NULL;
+	result->name = name;
 	result->value = NULL;
 	result->val_size = size;
 	result->next = NULL;

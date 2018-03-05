@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=c99 -Wall -Wextra -pedantic
+CFLAGS=-std=c99 -Wall -Wextra -pedantic -DDEBUG_LOGS
 
 all: libp4dev-d.so
 
@@ -14,6 +14,9 @@ p4rule.o: p4rule.c p4rule.h
 
 libp4dev-d.so: p4rule.o p4dev_types.o p4dev.o
 	$(CC) $(CFLAGS) -shared $^ -o $@ 2>libp4dev-d.log
+
+install: libp4dev-d.so
+	cp $^ ../../../CLI/
 
 clean:
 	rm *.log *.o *.gch libp4dev-d.so
