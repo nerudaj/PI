@@ -1,0 +1,1221 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bin\gen_pi_json.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\rpc_server.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\add_p4.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\counter_commands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\device_commands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\direct_res_reset.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\error_codes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\meter_commands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\p4_config_repo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\table_add.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\table_common.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\table_delete.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\table_dump.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\table_modify.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\table_reset_default.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\table_set_default.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\act_profs\act_prof_common.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\act_profs\act_prof_create_member.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\act_profs\act_prof_dump.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cli\act_profs\act_prof_groups.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\example_1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\example_2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="frontends_extra\cpp\example\example.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="frontends_extra\cpp\src\tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\fe_defines.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\pd\test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\pd\templates\src\pd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\pd\templates\src\pd_counters.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\pd\templates\src\pd_meters.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\pd\templates\src\pd_tables.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\pd\templates\src\pd_utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generators\pd\templates\thrift-src\pd_rpc_server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\read_file.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\vector.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\_assert.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\demo_grpc\app.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\demo_grpc\pi_server_main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\demo_grpc\simple_router_mgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\demo_grpc\test_perf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\demo_grpc\web_server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\frontend\src\action_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\frontend\src\action_prof_mgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\frontend\src\common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\frontend\src\device_mgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\frontend\src\logging.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\frontend\src\packet_io_mgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\frontend\src\table_info_store.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\p4info\convert_p4info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\p4info\p4info_to_and_from_proto.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\server\gnmi_dummy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\server\gnmi_sysrepo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\server\pi_server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\server\uint128.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\src\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\matchers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\mock_switch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\test_p4info_convert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\test_proto_fe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\test_proto_fe_packet_io.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\server\test_arbitration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\server\test_gnmi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\server\test_no_pipeline_config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\tests\server\test_pi_server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\third_party\fmt\format.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\third_party\fmt\ostream.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\third_party\fmt\posix.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\third_party\fmt\printf.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proto\third_party\fmt\_assert.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\device_map.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_act_prof.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_counter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_learn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_meter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_notifications_pub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_rpc_server.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_tables.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pi_value.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\config_readers\bmv2_json_reader.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\config_readers\native_json_reader.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\frontends\generic\pi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\actions.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\act_profs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\counters.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\meters.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\p4info.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\p4info_common.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\p4info_name_map.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\p4info_struct.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p4info\tables.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\logging.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\serialize.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\action_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\conn_mgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\cpu_send_recv.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\direct_res_spec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\pi_act_prof_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\pi_counter_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\pi_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\pi_learn_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\pi_meter_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\bmv2\pi_tables_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\devices.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\pi_act_prof_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\pi_counter_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\pi_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\pi_learn_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\pi_meter_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\pi_tables_imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\api\Device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\api\P4Dev_C.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\api\RuleSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\api\Table.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\dummy\p4dev.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\dummy\p4dev_types.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\combo\dummy\p4rule.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\dummy\func_counter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\dummy\pi_act_prof_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\dummy\pi_counter_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\dummy\pi_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\dummy\pi_learn_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\dummy\pi_meter_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\dummy\pi_tables_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\notifications.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\pi_act_prof_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\pi_counter_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\pi_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\pi_learn_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\pi_meter_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\pi_rpc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="targets\rpc\pi_tables_imp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_bmv2_json_reader.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_getnetv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_p4info.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\frontends\generic\test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\cjson\src\cJSON.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-all.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-cardinalities.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-internal-utils.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-matchers.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-spec-builders.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock_main.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-actions_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-cardinalities_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-actions_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-function-mockers_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-internal-utils_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-matchers_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-internal-utils_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-matchers_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-more-actions_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-nice-strict_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-port_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-spec-builders_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_all_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_ex_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_leak_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_link2_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_link_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_output_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_stress_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\codegear\gtest_all.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\codegear\gtest_link.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample1.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample10_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample1_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample2.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample2_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample3_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample4.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample4_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample5_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample6_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample7_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample8_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\samples\sample9_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-all.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-death-test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-filepath.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-port.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-printers.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-test-part.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-typed-test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\src\gtest_main.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-death-test_ex_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-death-test_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-filepath_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-linked_ptr_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-listener_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-message_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-options_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-param-test2_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-param-test_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-port_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-printers_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-test-part_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-tuple_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-typed-test2_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-typed-test_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-unittest-api_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_all_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_break_on_failure_unittest_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_catch_exceptions_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_color_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_environment_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_env_var_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_filter_unittest_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_help_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_list_tests_unittest_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_main_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_no_test_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_output_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_pred_impl_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_premature_exit_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_prod_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_repeat_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_shuffle_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_sole_header_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_stress_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_throw_on_failure_ex_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_throw_on_failure_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_uninitialized_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_unittest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_xml_outfile1_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_xml_outfile2_test_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_xml_output_unittest_.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\test\production.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\xcode\samples\frameworksample\widget.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\googletest\googletest\xcode\samples\frameworksample\widget_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\unity\src\unity.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third_party\unity\src\unity_fixture.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cli\commands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cli\error_codes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cli\p4_config_repo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cli\table_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cli\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cli\act_profs\act_prof_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="frontends_extra\cpp\pi\frontends\cpp\tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generators\pd\templates\pd\pd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generators\pd\templates\pd\pd_counters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generators\pd\templates\pd\pd_meters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generators\pd\templates\pd\pd_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generators\pd\templates\pd\pd_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generators\pd\templates\src\pd_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generators\pd\templates\thrift-src\pd_rpc_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\p4info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi_act_prof.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi_counter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi_learn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi_meter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\pi_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\frontends\generic\pi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\int\pi_int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\int\rpc_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\int\serialize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\p4info\actions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\p4info\act_profs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\p4info\counters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\p4info\meters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\p4info\tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\target\pi_act_prof_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\target\pi_counter_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\target\pi_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\target\pi_learn_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\target\pi_meter_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pi\target\pi_tables_imp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\read_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\_assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\demo_grpc\simple_router_mgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\demo_grpc\web_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\pi\frontends\proto\device_mgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\pi\frontends\proto\logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\src\action_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\src\action_prof_mgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\src\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\src\logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\src\packet_io_mgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\src\report_error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\frontend\src\table_info_store.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\p4info\p4info_to_and_from_proto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\pi\proto\util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\server\gnmi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\server\log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\server\pi_server_testing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\server\uint128.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\server\pi\proto\pi_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\tests\matchers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\tests\mock_switch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\tests\server\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\container.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\format.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\ostream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\posix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\printf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="proto\third_party\fmt\_assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\device_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info_int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pi_notifications_pub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\config_readers\readers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\actions_int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\act_profs_int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\counters_int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\meters_int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\p4info_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\p4info_name_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\p4info_struct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\p4info\tables_int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\bmv2\action_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\bmv2\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\bmv2\conn_mgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\bmv2\cpu_send_recv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\bmv2\direct_res_spec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\devices.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\api\P4Dev_C.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\api\Device.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\api\P4Dev.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\api\RuleSet.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\api\Table.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\dummy\p4dev.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\dummy\p4dev_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\dummy\p4rule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\dummy\func_counter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\rpc\pi_rpc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\cjson\include\cjson\cJSON.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-actions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-cardinalities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-actions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-function-mockers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-matchers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-nice-strict.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-matchers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-more-actions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-more-matchers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-spec-builders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\gmock-generated-internal-utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\gmock-internal-utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\gmock-port.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\custom\gmock-generated-actions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\custom\gmock-matchers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\custom\gmock-port.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googlemock\test\gmock_link_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-death-test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-message.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-param-test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-printers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-spi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-test-part.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-typed-test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest_pred_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest_prod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-death-test-internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-filepath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-linked_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-param-util-generated.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-param-util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-port-arch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-port.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-tuple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-type-util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\custom\gtest-port.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\custom\gtest-printers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\custom\gtest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\samples\prime_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\samples\sample1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\samples\sample2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\samples\sample3-inl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\samples\sample4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\src\gtest-internal-inl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\test\gtest-param-test_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\test\gtest-typed-test_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\test\production.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\googletest\googletest\xcode\samples\frameworksample\widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\unity\include\unity\unity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\unity\include\unity\unity_fixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\unity\include\unity\unity_fixture_internals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\unity\include\unity\unity_fixture_malloc_overrides.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\unity\include\unity\unity_internals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="third_party\googletest\googlemock\scripts\generator\README.cppclean" />
+  </ItemGroup>
+</Project>

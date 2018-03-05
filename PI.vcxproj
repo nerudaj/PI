@@ -1,0 +1,489 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{037FE50A-9CB2-4B38-B54D-AB22A2C2E22F}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>C:\Users\doomista\Desktop\Fit\p4\PI\include;C:\Users\doomista\Desktop\Fit\p4\PI\targets\combo\dummy;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>C:\Users\doomista\Desktop\Fit\p4\PI\include;C:\Users\doomista\Desktop\Fit\p4\PI\targets\combo\dummy;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Users\doomista\Desktop\Fit\p4\PI\include;C:\Users\doomista\Desktop\Fit\p4\PI\targets\combo\dummy;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\Users\doomista\Desktop\Fit\p4\PI\include;C:\Users\doomista\Desktop\Fit\p4\PI\targets\combo\dummy;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="bin\gen_pi_json.c" />
+    <ClCompile Include="bin\rpc_server.c" />
+    <ClCompile Include="cli\act_profs\act_prof_common.c" />
+    <ClCompile Include="cli\act_profs\act_prof_create_member.c" />
+    <ClCompile Include="cli\act_profs\act_prof_dump.c" />
+    <ClCompile Include="cli\act_profs\act_prof_groups.c" />
+    <ClCompile Include="cli\add_p4.c" />
+    <ClCompile Include="cli\counter_commands.c" />
+    <ClCompile Include="cli\device_commands.c" />
+    <ClCompile Include="cli\direct_res_reset.c" />
+    <ClCompile Include="cli\error_codes.c" />
+    <ClCompile Include="cli\main.c" />
+    <ClCompile Include="cli\meter_commands.c" />
+    <ClCompile Include="cli\p4_config_repo.c" />
+    <ClCompile Include="cli\table_add.c" />
+    <ClCompile Include="cli\table_common.c" />
+    <ClCompile Include="cli\table_delete.c" />
+    <ClCompile Include="cli\table_dump.c" />
+    <ClCompile Include="cli\table_modify.c" />
+    <ClCompile Include="cli\table_reset_default.c" />
+    <ClCompile Include="cli\table_set_default.c" />
+    <ClCompile Include="cli\utils.c" />
+    <ClCompile Include="examples\example_1.c" />
+    <ClCompile Include="examples\example_2.c" />
+    <ClCompile Include="frontends_extra\cpp\example\example.cpp" />
+    <ClCompile Include="frontends_extra\cpp\src\tables.cpp" />
+    <ClCompile Include="generators\fe_defines.c" />
+    <ClCompile Include="generators\pd\templates\src\pd.c" />
+    <ClCompile Include="generators\pd\templates\src\pd_counters.c" />
+    <ClCompile Include="generators\pd\templates\src\pd_meters.c" />
+    <ClCompile Include="generators\pd\templates\src\pd_tables.c" />
+    <ClCompile Include="generators\pd\templates\src\pd_utils.c" />
+    <ClCompile Include="generators\pd\templates\thrift-src\pd_rpc_server.cpp" />
+    <ClCompile Include="generators\pd\test.c" />
+    <ClCompile Include="lib\read_file.c" />
+    <ClCompile Include="lib\vector.c" />
+    <ClCompile Include="lib\_assert.c" />
+    <ClCompile Include="proto\demo_grpc\app.cpp" />
+    <ClCompile Include="proto\demo_grpc\pi_server_main.cpp" />
+    <ClCompile Include="proto\demo_grpc\simple_router_mgr.cpp" />
+    <ClCompile Include="proto\demo_grpc\test_perf.cpp" />
+    <ClCompile Include="proto\demo_grpc\web_server.cpp" />
+    <ClCompile Include="proto\frontend\src\action_helpers.cpp" />
+    <ClCompile Include="proto\frontend\src\action_prof_mgr.cpp" />
+    <ClCompile Include="proto\frontend\src\common.cpp" />
+    <ClCompile Include="proto\frontend\src\device_mgr.cpp" />
+    <ClCompile Include="proto\frontend\src\logging.cpp" />
+    <ClCompile Include="proto\frontend\src\packet_io_mgr.cpp" />
+    <ClCompile Include="proto\frontend\src\table_info_store.cpp" />
+    <ClCompile Include="proto\p4info\convert_p4info.cpp" />
+    <ClCompile Include="proto\p4info\p4info_to_and_from_proto.cpp" />
+    <ClCompile Include="proto\server\gnmi_dummy.cpp" />
+    <ClCompile Include="proto\server\gnmi_sysrepo.cpp" />
+    <ClCompile Include="proto\server\pi_server.cpp" />
+    <ClCompile Include="proto\server\uint128.cpp" />
+    <ClCompile Include="proto\src\util.cpp" />
+    <ClCompile Include="proto\tests\main.cpp" />
+    <ClCompile Include="proto\tests\matchers.cpp" />
+    <ClCompile Include="proto\tests\mock_switch.cpp" />
+    <ClCompile Include="proto\tests\server\test_arbitration.cpp" />
+    <ClCompile Include="proto\tests\server\test_gnmi.cpp" />
+    <ClCompile Include="proto\tests\server\test_no_pipeline_config.cpp" />
+    <ClCompile Include="proto\tests\server\test_pi_server.cpp" />
+    <ClCompile Include="proto\tests\test_p4info_convert.cpp" />
+    <ClCompile Include="proto\tests\test_proto_fe.cpp" />
+    <ClCompile Include="proto\tests\test_proto_fe_packet_io.cpp" />
+    <ClCompile Include="proto\third_party\fmt\format.cc" />
+    <ClCompile Include="proto\third_party\fmt\ostream.cc" />
+    <ClCompile Include="proto\third_party\fmt\posix.cc" />
+    <ClCompile Include="proto\third_party\fmt\printf.cc" />
+    <ClCompile Include="proto\third_party\fmt\_assert.cc" />
+    <ClCompile Include="src\config_readers\bmv2_json_reader.c" />
+    <ClCompile Include="src\config_readers\native_json_reader.c" />
+    <ClCompile Include="src\device_map.c" />
+    <ClCompile Include="src\frontends\generic\pi.c" />
+    <ClCompile Include="src\p4info\actions.c" />
+    <ClCompile Include="src\p4info\act_profs.c" />
+    <ClCompile Include="src\p4info\counters.c" />
+    <ClCompile Include="src\p4info\meters.c" />
+    <ClCompile Include="src\p4info\p4info.c" />
+    <ClCompile Include="src\p4info\p4info_common.c" />
+    <ClCompile Include="src\p4info\p4info_name_map.c" />
+    <ClCompile Include="src\p4info\p4info_struct.c" />
+    <ClCompile Include="src\p4info\tables.c" />
+    <ClCompile Include="src\pi.c" />
+    <ClCompile Include="src\pi_act_prof.c" />
+    <ClCompile Include="src\pi_counter.c" />
+    <ClCompile Include="src\pi_learn.c" />
+    <ClCompile Include="src\pi_meter.c" />
+    <ClCompile Include="src\pi_notifications_pub.c" />
+    <ClCompile Include="src\pi_rpc_server.c" />
+    <ClCompile Include="src\pi_tables.c" />
+    <ClCompile Include="src\pi_value.c" />
+    <ClCompile Include="src\utils\logging.c" />
+    <ClCompile Include="src\utils\serialize.c" />
+    <ClCompile Include="targets\bmv2\action_helpers.cpp" />
+    <ClCompile Include="targets\bmv2\common.cpp" />
+    <ClCompile Include="targets\bmv2\conn_mgr.cpp" />
+    <ClCompile Include="targets\bmv2\cpu_send_recv.cpp" />
+    <ClCompile Include="targets\bmv2\direct_res_spec.cpp" />
+    <ClCompile Include="targets\bmv2\pi_act_prof_imp.cpp" />
+    <ClCompile Include="targets\bmv2\pi_counter_imp.cpp" />
+    <ClCompile Include="targets\bmv2\pi_imp.cpp" />
+    <ClCompile Include="targets\bmv2\pi_learn_imp.cpp" />
+    <ClCompile Include="targets\bmv2\pi_meter_imp.cpp" />
+    <ClCompile Include="targets\bmv2\pi_tables_imp.cpp" />
+    <ClCompile Include="targets\combo\api\Device.cpp" />
+    <ClCompile Include="targets\combo\api\P4Dev_C.cpp" />
+    <ClCompile Include="targets\combo\api\RuleSet.cpp" />
+    <ClCompile Include="targets\combo\api\Table.cpp" />
+    <ClCompile Include="targets\combo\devices.cpp" />
+    <ClCompile Include="targets\combo\dummy\p4dev.c" />
+    <ClCompile Include="targets\combo\dummy\p4dev_types.c" />
+    <ClCompile Include="targets\combo\dummy\p4rule.c" />
+    <ClCompile Include="targets\combo\pi_act_prof_imp.cpp" />
+    <ClCompile Include="targets\combo\pi_counter_imp.cpp" />
+    <ClCompile Include="targets\combo\pi_imp.cpp" />
+    <ClCompile Include="targets\combo\pi_learn_imp.cpp" />
+    <ClCompile Include="targets\combo\pi_meter_imp.cpp" />
+    <ClCompile Include="targets\combo\pi_tables_imp.cpp" />
+    <ClCompile Include="targets\dummy\func_counter.c" />
+    <ClCompile Include="targets\dummy\pi_act_prof_imp.c" />
+    <ClCompile Include="targets\dummy\pi_counter_imp.c" />
+    <ClCompile Include="targets\dummy\pi_imp.c" />
+    <ClCompile Include="targets\dummy\pi_learn_imp.c" />
+    <ClCompile Include="targets\dummy\pi_meter_imp.c" />
+    <ClCompile Include="targets\dummy\pi_tables_imp.c" />
+    <ClCompile Include="targets\rpc\notifications.c" />
+    <ClCompile Include="targets\rpc\pi_act_prof_imp.c" />
+    <ClCompile Include="targets\rpc\pi_counter_imp.c" />
+    <ClCompile Include="targets\rpc\pi_imp.c" />
+    <ClCompile Include="targets\rpc\pi_learn_imp.c" />
+    <ClCompile Include="targets\rpc\pi_meter_imp.c" />
+    <ClCompile Include="targets\rpc\pi_rpc.c" />
+    <ClCompile Include="targets\rpc\pi_tables_imp.c" />
+    <ClCompile Include="tests\frontends\generic\test.c" />
+    <ClCompile Include="tests\main.c" />
+    <ClCompile Include="tests\test_bmv2_json_reader.c" />
+    <ClCompile Include="tests\test_getnetv.c" />
+    <ClCompile Include="tests\test_p4info.c" />
+    <ClCompile Include="tests\utils.c" />
+    <ClCompile Include="third_party\cjson\src\cJSON.c" />
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-all.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-cardinalities.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-internal-utils.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-matchers.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock-spec-builders.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\src\gmock_main.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-actions_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-cardinalities_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-actions_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-function-mockers_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-internal-utils_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-generated-matchers_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-internal-utils_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-matchers_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-more-actions_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-nice-strict_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-port_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock-spec-builders_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_all_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_ex_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_leak_test_.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_link2_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_link_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_output_test_.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_stress_test.cc" />
+    <ClCompile Include="third_party\googletest\googlemock\test\gmock_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\codegear\gtest_all.cc" />
+    <ClCompile Include="third_party\googletest\googletest\codegear\gtest_link.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample1.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample10_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample1_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample2.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample2_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample3_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample4.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample4_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample5_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample6_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample7_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample8_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\samples\sample9_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-all.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-death-test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-filepath.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-port.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-printers.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-test-part.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest-typed-test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\src\gtest_main.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-death-test_ex_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-death-test_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-filepath_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-linked_ptr_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-listener_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-message_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-options_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-param-test2_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-param-test_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-port_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-printers_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-test-part_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-tuple_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-typed-test2_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-typed-test_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest-unittest-api_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_all_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_break_on_failure_unittest_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_catch_exceptions_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_color_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_environment_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_env_var_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_filter_unittest_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_help_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_list_tests_unittest_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_main_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_no_test_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_output_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_pred_impl_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_premature_exit_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_prod_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_repeat_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_shuffle_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_sole_header_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_stress_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_throw_on_failure_ex_test.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_throw_on_failure_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_uninitialized_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_unittest.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_xml_outfile1_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_xml_outfile2_test_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\gtest_xml_output_unittest_.cc" />
+    <ClCompile Include="third_party\googletest\googletest\test\production.cc" />
+    <ClCompile Include="third_party\googletest\googletest\xcode\samples\frameworksample\widget.cc" />
+    <ClCompile Include="third_party\googletest\googletest\xcode\samples\frameworksample\widget_test.cc" />
+    <ClCompile Include="third_party\unity\src\unity.c" />
+    <ClCompile Include="third_party\unity\src\unity_fixture.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cli\act_profs\act_prof_common.h" />
+    <ClInclude Include="cli\commands.h" />
+    <ClInclude Include="cli\error_codes.h" />
+    <ClInclude Include="cli\p4_config_repo.h" />
+    <ClInclude Include="cli\table_common.h" />
+    <ClInclude Include="cli\utils.h" />
+    <ClInclude Include="frontends_extra\cpp\pi\frontends\cpp\tables.h" />
+    <ClInclude Include="generators\pd\templates\pd\pd.h" />
+    <ClInclude Include="generators\pd\templates\pd\pd_counters.h" />
+    <ClInclude Include="generators\pd\templates\pd\pd_meters.h" />
+    <ClInclude Include="generators\pd\templates\pd\pd_tables.h" />
+    <ClInclude Include="generators\pd\templates\pd\pd_types.h" />
+    <ClInclude Include="generators\pd\templates\src\pd_utils.h" />
+    <ClInclude Include="generators\pd\templates\thrift-src\pd_rpc_server.h" />
+    <ClInclude Include="include\pi\frontends\generic\pi.h" />
+    <ClInclude Include="include\pi\int\pi_int.h" />
+    <ClInclude Include="include\pi\int\rpc_common.h" />
+    <ClInclude Include="include\pi\int\serialize.h" />
+    <ClInclude Include="include\pi\p4info.h" />
+    <ClInclude Include="include\pi\p4info\actions.h" />
+    <ClInclude Include="include\pi\p4info\act_profs.h" />
+    <ClInclude Include="include\pi\p4info\counters.h" />
+    <ClInclude Include="include\pi\p4info\meters.h" />
+    <ClInclude Include="include\pi\p4info\tables.h" />
+    <ClInclude Include="include\pi\pi.h" />
+    <ClInclude Include="include\pi\pi_act_prof.h" />
+    <ClInclude Include="include\pi\pi_base.h" />
+    <ClInclude Include="include\pi\pi_counter.h" />
+    <ClInclude Include="include\pi\pi_learn.h" />
+    <ClInclude Include="include\pi\pi_meter.h" />
+    <ClInclude Include="include\pi\pi_tables.h" />
+    <ClInclude Include="include\pi\pi_value.h" />
+    <ClInclude Include="include\pi\target\pi_act_prof_imp.h" />
+    <ClInclude Include="include\pi\target\pi_counter_imp.h" />
+    <ClInclude Include="include\pi\target\pi_imp.h" />
+    <ClInclude Include="include\pi\target\pi_learn_imp.h" />
+    <ClInclude Include="include\pi\target\pi_meter_imp.h" />
+    <ClInclude Include="include\pi\target\pi_tables_imp.h" />
+    <ClInclude Include="lib\read_file.h" />
+    <ClInclude Include="lib\vector.h" />
+    <ClInclude Include="lib\_assert.h" />
+    <ClInclude Include="proto\demo_grpc\simple_router_mgr.h" />
+    <ClInclude Include="proto\demo_grpc\web_server.h" />
+    <ClInclude Include="proto\frontend\pi\frontends\proto\device_mgr.h" />
+    <ClInclude Include="proto\frontend\pi\frontends\proto\logging.h" />
+    <ClInclude Include="proto\frontend\src\action_helpers.h" />
+    <ClInclude Include="proto\frontend\src\action_prof_mgr.h" />
+    <ClInclude Include="proto\frontend\src\common.h" />
+    <ClInclude Include="proto\frontend\src\logger.h" />
+    <ClInclude Include="proto\frontend\src\packet_io_mgr.h" />
+    <ClInclude Include="proto\frontend\src\report_error.h" />
+    <ClInclude Include="proto\frontend\src\table_info_store.h" />
+    <ClInclude Include="proto\p4info\p4info_to_and_from_proto.h" />
+    <ClInclude Include="proto\pi\proto\util.h" />
+    <ClInclude Include="proto\server\gnmi.h" />
+    <ClInclude Include="proto\server\log.h" />
+    <ClInclude Include="proto\server\pi\proto\pi_server.h" />
+    <ClInclude Include="proto\server\pi_server_testing.h" />
+    <ClInclude Include="proto\server\uint128.h" />
+    <ClInclude Include="proto\tests\matchers.h" />
+    <ClInclude Include="proto\tests\mock_switch.h" />
+    <ClInclude Include="proto\tests\server\utils.h" />
+    <ClInclude Include="proto\third_party\fmt\container.h" />
+    <ClInclude Include="proto\third_party\fmt\format.h" />
+    <ClInclude Include="proto\third_party\fmt\ostream.h" />
+    <ClInclude Include="proto\third_party\fmt\posix.h" />
+    <ClInclude Include="proto\third_party\fmt\printf.h" />
+    <ClInclude Include="proto\third_party\fmt\string.h" />
+    <ClInclude Include="proto\third_party\fmt\time.h" />
+    <ClInclude Include="proto\third_party\fmt\_assert.h" />
+    <ClInclude Include="src\config_readers\readers.h" />
+    <ClInclude Include="src\device_map.h" />
+    <ClInclude Include="src\p4info\actions_int.h" />
+    <ClInclude Include="src\p4info\act_profs_int.h" />
+    <ClInclude Include="src\p4info\counters_int.h" />
+    <ClInclude Include="src\p4info\meters_int.h" />
+    <ClInclude Include="src\p4info\p4info_common.h" />
+    <ClInclude Include="src\p4info\p4info_name_map.h" />
+    <ClInclude Include="src\p4info\p4info_struct.h" />
+    <ClInclude Include="src\p4info\tables_int.h" />
+    <ClInclude Include="src\p4info_int.h" />
+    <ClInclude Include="src\pi_notifications_pub.h" />
+    <ClInclude Include="src\utils\logging.h" />
+    <ClInclude Include="src\utils\utils.h" />
+    <ClInclude Include="targets\bmv2\action_helpers.h" />
+    <ClInclude Include="targets\bmv2\common.h" />
+    <ClInclude Include="targets\bmv2\conn_mgr.h" />
+    <ClInclude Include="targets\bmv2\cpu_send_recv.h" />
+    <ClInclude Include="targets\bmv2\direct_res_spec.h" />
+    <ClInclude Include="targets\combo\api\Device.hpp" />
+    <ClInclude Include="targets\combo\api\P4Dev.hpp" />
+    <ClInclude Include="targets\combo\api\P4Dev_C.h" />
+    <ClInclude Include="targets\combo\api\RuleSet.hpp" />
+    <ClInclude Include="targets\combo\api\Table.hpp" />
+    <ClInclude Include="targets\combo\devices.hpp" />
+    <ClInclude Include="targets\combo\dummy\p4dev.h" />
+    <ClInclude Include="targets\combo\dummy\p4dev_types.h" />
+    <ClInclude Include="targets\combo\dummy\p4rule.h" />
+    <ClInclude Include="targets\dummy\func_counter.h" />
+    <ClInclude Include="targets\rpc\pi_rpc.h" />
+    <ClInclude Include="tests\utils.h" />
+    <ClInclude Include="third_party\cjson\include\cjson\cJSON.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-actions.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-cardinalities.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-actions.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-function-mockers.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-matchers.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-generated-nice-strict.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-matchers.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-more-actions.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-more-matchers.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock-spec-builders.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\gmock.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\custom\gmock-generated-actions.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\custom\gmock-matchers.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\custom\gmock-port.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\gmock-generated-internal-utils.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\gmock-internal-utils.h" />
+    <ClInclude Include="third_party\googletest\googlemock\include\gmock\internal\gmock-port.h" />
+    <ClInclude Include="third_party\googletest\googlemock\test\gmock_link_test.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-death-test.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-message.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-param-test.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-printers.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-spi.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-test-part.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest-typed-test.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest_pred_impl.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\gtest_prod.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\custom\gtest-port.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\custom\gtest-printers.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\custom\gtest.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-death-test-internal.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-filepath.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-internal.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-linked_ptr.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-param-util-generated.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-param-util.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-port-arch.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-port.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-string.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-tuple.h" />
+    <ClInclude Include="third_party\googletest\googletest\include\gtest\internal\gtest-type-util.h" />
+    <ClInclude Include="third_party\googletest\googletest\samples\prime_tables.h" />
+    <ClInclude Include="third_party\googletest\googletest\samples\sample1.h" />
+    <ClInclude Include="third_party\googletest\googletest\samples\sample2.h" />
+    <ClInclude Include="third_party\googletest\googletest\samples\sample3-inl.h" />
+    <ClInclude Include="third_party\googletest\googletest\samples\sample4.h" />
+    <ClInclude Include="third_party\googletest\googletest\src\gtest-internal-inl.h" />
+    <ClInclude Include="third_party\googletest\googletest\test\gtest-param-test_test.h" />
+    <ClInclude Include="third_party\googletest\googletest\test\gtest-typed-test_test.h" />
+    <ClInclude Include="third_party\googletest\googletest\test\production.h" />
+    <ClInclude Include="third_party\googletest\googletest\xcode\samples\frameworksample\widget.h" />
+    <ClInclude Include="third_party\unity\include\unity\unity.h" />
+    <ClInclude Include="third_party\unity\include\unity\unity_fixture.h" />
+    <ClInclude Include="third_party\unity\include\unity\unity_fixture_internals.h" />
+    <ClInclude Include="third_party\unity\include\unity\unity_fixture_malloc_overrides.h" />
+    <ClInclude Include="third_party\unity\include\unity\unity_internals.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="third_party\googletest\googlemock\scripts\generator\README.cppclean" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
