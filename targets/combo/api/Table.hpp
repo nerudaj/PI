@@ -24,6 +24,7 @@ namespace p4 {
 		 *  \brief Insert rule to the table
 		 *  
 		 *  \param [in] rule Initialized rule object
+		 *  \param [out] index Index of rule within table
 		 *  \return P4DEV_TABLE_FULL if table is already at maximum capacity. 
 		 *  P4DEV_ALLOCATE_ERROR if the rule could not be stored in memory.
 		 *  P4DEV_OK on success.

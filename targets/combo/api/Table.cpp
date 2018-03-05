@@ -6,6 +6,10 @@
 using p4::Table;
 
 bool Table::keysMatch(const p4key_elem_t* first, const p4key_elem_t* second) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::keysMatch(...)\n";
+	#endif
+	
 	assert(first != NULL);
 	assert(second != NULL);
 	assert(type != P4ENGINE_UNKNOWN); // NOTE: Verify and remove
@@ -18,6 +22,10 @@ bool Table::keysMatch(const p4key_elem_t* first, const p4key_elem_t* second) {
 }
 
 uint32_t Table::insertRule(p4rule_t *rule) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::insertRule(...)\n";
+	#endif
+	
 	assert(rule != NULL);
 	assert(strcmp(rule->table_name, name.c_str()) == 0);
 
@@ -26,10 +34,8 @@ uint32_t Table::insertRule(p4rule_t *rule) {
 		return P4DEV_ERROR; // TODO: P4DEV_TABLE_FULL;
 	}
 	
-	uint32_t index;
 	uint32_t status = ruleset->insertRule(rule, index);
 	if (status != P4DEV_OK) {
-		std::cerr << "Insert error\n";
 		return status;
 	}
 	
@@ -37,7 +43,6 @@ uint32_t Table::insertRule(p4rule_t *rule) {
 		indices.push_back(index);
 	}
 	catch (std::bad_alloc& ba) {
-		std::cerr << "alloc err\n";
 		ruleset->deleteRule(index);
 		return P4DEV_ALLOCATE_ERROR;
 	}
@@ -46,6 +51,10 @@ uint32_t Table::insertRule(p4rule_t *rule) {
 }
 
 uint32_t Table::modifyRule(uint32_t index, p4rule_t *rule) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::modifyRule(...)\n";
+	#endif
+	
 	assert(rule != NULL);
 	
 	// TODO: this
@@ -53,6 +62,10 @@ uint32_t Table::modifyRule(uint32_t index, p4rule_t *rule) {
 }
 
 uint32_t Table::deleteRule(uint32_t index) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::deleteRule(...)\n";
+	#endif
+	
 	if (index >= indices.size()) {
 		return P4DEV_ERROR;
 	}
@@ -64,6 +77,10 @@ uint32_t Table::deleteRule(uint32_t index) {
 }
 
 uint32_t Table::findRule(p4key_elem_t* key, uint32_t &index) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::findRule(...)\n";
+	#endif
+	
 	assert(key != NULL);
 	
 	for (uint32_t i = 0; i < indices.size(); i++) {
@@ -77,6 +94,10 @@ uint32_t Table::findRule(p4key_elem_t* key, uint32_t &index) {
 }
 
 uint32_t Table::initialize(const char *name, RuleSet *rulesetPtr, p4dev_t *deviceInfoPtr) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::initialize(...)\n";
+	#endif
+	
 	assert(name != NULL);
 	assert(rulesetPtr != NULL);
 	assert(deviceInfoPtr != NULL);
@@ -97,6 +118,10 @@ uint32_t Table::initialize(const char *name, RuleSet *rulesetPtr, p4dev_t *devic
 }
 
 void Table::deinitialize() {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::deinitialize(...)\n";
+	#endif
+	
 	indices.clear();
 	name.clear();
 	ruleset = NULL;
@@ -104,6 +129,10 @@ void Table::deinitialize() {
 }
 
 void Table::recomputeIndices() {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::recomputeIndices(...)\n";
+	#endif
+	
 	indices.clear();
 	uint32_t size = ruleset->getSize();
 	
@@ -118,6 +147,10 @@ void Table::recomputeIndices() {
 }
 
 uint32_t Table::clear() {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::clear(...)\n";
+	#endif
+	
 	uint32_t status = p4dev_initialize_table(deviceInfo, name.c_str());
 	if (status != P4DEV_OK) {
 		return status;
@@ -139,6 +172,5 @@ Table::Table(const char *name, RuleSet *rulesetPtr, p4dev_t *deviceInfoPtr) {
 }
 
 Table::~Table() {
-	std::cerr << "ERR: Table destructor\n";
 	deinitialize();
 }

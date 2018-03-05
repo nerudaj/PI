@@ -5,6 +5,10 @@
 using namespace p4;
 
 void RuleSet::cleanup() {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::cleanup(...)\n";
+	#endif
+	
 	for (uint32_t i = 0; i < rules.size(); i++) {
 		if (isInvalidRule(rules[i])) {
 			rules.erase(rules.begin() + i);
@@ -17,6 +21,10 @@ void RuleSet::cleanup() {
 }
 
 uint32_t RuleSet::writeRules() {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::writeRules(...)\n";
+	#endif
+	
 	uint32_t status;
 	status = p4dev_enable(deviceInfo);	
 	if (status != P4DEV_OK) {
@@ -38,6 +46,10 @@ uint32_t RuleSet::writeRules() {
 }
 
 uint32_t RuleSet::invalidateRule(const uint32_t index) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::invalidateRule(...)\n";
+	#endif
+	
 	// TODO: rewrite
 	p4rule_free(rules[index]);
 	rules[index]->table_name = NULL;
@@ -45,6 +57,10 @@ uint32_t RuleSet::invalidateRule(const uint32_t index) {
 }
 
 bool RuleSet::isInvalidRule(p4rule_t *rule) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::isInvalidRule(...)\n";
+	#endif
+	
 	assert(rule != NULL);
 	// TODO: rewrite
 	return rule->table_name == NULL;
@@ -52,6 +68,10 @@ bool RuleSet::isInvalidRule(p4rule_t *rule) {
 
 
 uint32_t RuleSet::insertRule(p4rule_t *rule, uint32_t &index) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::insertRule(...)\n";
+	#endif
+	
 	assert(rule != NULL);
 	
 	try {
@@ -71,11 +91,19 @@ uint32_t RuleSet::insertRule(p4rule_t *rule, uint32_t &index) {
 }
 
 uint32_t RuleSet::modifyRule() {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::modifyRule(...)\n";
+	#endif
+	
 	// TODO: this
 	return P4DEV_ERROR;
 }
 
 uint32_t RuleSet::deleteRule(const uint32_t index) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::deleteRule(...)\n";
+	#endif
+	
 	uint32_t status = invalidateRule(index);
 	if (status != P4DEV_OK) {
 		return status;
@@ -90,6 +118,10 @@ uint32_t RuleSet::deleteRule(const uint32_t index) {
 }
 
 uint32_t RuleSet::addTablePointer(TablePtr tablePtr) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::addTablePointer(...)\n";
+	#endif
+	
 	assert(tablePtr != NULL);
 	
 	try {
@@ -103,6 +135,10 @@ uint32_t RuleSet::addTablePointer(TablePtr tablePtr) {
 }
 
 p4rule_t *RuleSet::getRule(const uint32_t index) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::getRule(...)\n";
+	#endif
+	
 	if (index >= rules.size()) {
 		return NULL;
 	}
@@ -111,6 +147,10 @@ p4rule_t *RuleSet::getRule(const uint32_t index) {
 }
 
 void RuleSet::initialize(p4dev_t *deviceInfoPtr) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::initialize(...)\n";
+	#endif
+	
 	assert(deviceInfoPtr != NULL);
 	
 	deviceInfo = deviceInfoPtr;
@@ -118,11 +158,19 @@ void RuleSet::initialize(p4dev_t *deviceInfoPtr) {
 }
 
 void RuleSet::deinitialize() {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::deinitialize(...)\n";
+	#endif
+	
 	clear();
 	tables.clear();
 }
 
 void RuleSet::clear() {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::clear(...)\n";
+	#endif
+	
 	for (uint32_t i = 0; i < rules.size(); i++) {
 		p4rule_free(rules[i]);
 	}
@@ -131,6 +179,10 @@ void RuleSet::clear() {
 }
 
 void RuleSet::clearTable(const std::vector<uint32_t> &indices) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::clearTable(...)\n";
+	#endif
+	
 	for (uint32_t i = 0; i < indices.size(); i++) {
 		invalidateRule(indices[i]);
 	}
@@ -139,10 +191,8 @@ void RuleSet::clearTable(const std::vector<uint32_t> &indices) {
 }
 
 RuleSet::RuleSet() {
-	
 }
 
 RuleSet::~RuleSet() {
-	std::cerr << "ERR: RuleSet destructor\n";
 	deinitialize();
 }

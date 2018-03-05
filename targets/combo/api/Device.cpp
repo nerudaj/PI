@@ -4,6 +4,10 @@
 using namespace p4;
 
 TablePtr Device::getTable(const char *name) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Device::getTable(...)\n";
+	#endif
+	
 	auto iterator = tables.find(name);
 	if (iterator == tables.end()) {
 		return NULL;
@@ -13,6 +17,10 @@ TablePtr Device::getTable(const char *name) {
 }
 
 uint32_t Device::initialize(const p4dev_name_t name) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Device::initialize(...)\n";
+	#endif
+	
 	uint32_t status;
 	if ((status = p4dev_init(&info, name)) != P4DEV_OK) {
 		return status;
@@ -46,6 +54,10 @@ uint32_t Device::initialize(const p4dev_name_t name) {
 }
 
 void Device::deinitialize() {
+	#ifdef DEBUG_LOGS
+	std::cout << "Device::deinitialize(...)\n";
+	#endif
+	
 	if (info.dt != NULL) {
 		tables.clear();
 		ruleset.clear();
@@ -54,6 +66,10 @@ void Device::deinitialize() {
 }
 
 uint32_t Device::reset() {
+	#ifdef DEBUG_LOGS
+	std::cout << "Device::reset(...)\n";
+	#endif
+	
 	uint32_t status = p4dev_reset_device(&info);
 	if (status != P4DEV_OK) {
 		return status;
@@ -72,6 +88,5 @@ Device::Device() {
 }
 
 Device::~Device() {
-	std::cerr << "ERR: Device destructor\n";
 	deinitialize();
 }
