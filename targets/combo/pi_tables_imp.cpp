@@ -44,13 +44,14 @@ p4rule_t *createRule(const char *tableName, const pi_p4info_t *info, pi_p4_id_t 
 	return result;
 }
 
-uint32_t addKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match_key_t *match_key, p4rule_t *rule) {
+uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match_key_t *match_key, p4key_elem_t **key) {
 	const char *data = match_key->data;
 
-	p4key_elem_t *key;
 	uint8_t *value;
 	uint8_t *mask;
 	uint32_t status;
+
+	p4key_elem_t *last = NULL;
 
 	size_t matchFieldsSize = pi_p4info_table_num_match_fields(info, table_id);
 	for (std::size_t i = 0; i < matchFieldsSize; i++) {
@@ -75,8 +76,15 @@ uint32_t addKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match_ke
 			memcpy(value, data, bytewidth);
 			data += bytewidth;
 			data += retrieve_uint32(data, &prefixLen);
-			key = bstlpm_p4key_create(keyName, bytewidth, value, prefixLen);
-			if ((status = p4rule_add_key_element(rule, key)) != P4DEV_OK) return P4DEV_ALLOCATE_ERROR;
+
+			if (last == NULL) {
+				(*key) = bstlpm_p4key_create(keyName, bytewidth, value, prefixLen);
+				last = *key;
+			}
+			else {
+				last->next = bstlpm_p4key_create(keyName, bytewidth, value, prefixLen);
+				last = last->next;
+			}
 			break;
 
 		case PI_P4INFO_MATCH_TYPE_TERNARY:
@@ -89,8 +97,15 @@ uint32_t addKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match_ke
 			data += bytewidth;
 			memcpy(mask, data, bytewidth);
 			data += bytewidth;
-			key = tcam_p4key_create(keyName, bytewidth, value, mask);
-			if ((status = p4rule_add_key_element(rule, key)) != P4DEV_OK) return P4DEV_ALLOCATE_ERROR;
+
+			if (last == NULL) {
+				(*key) = tcam_p4key_create(keyName, bytewidth, value, mask);
+				last = *key;
+			}
+			else {
+				last->next = tcam_p4key_create(keyName, bytewidth, value, mask);
+				last = last->next;
+			}
 
 			//*requires_priority = true;
 			break;
@@ -104,6 +119,18 @@ uint32_t addKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match_ke
 			break;
 		}
 	}
+
+	return P4DEV_OK;
+}
+
+uint32_t addKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match_key_t *match_key, p4rule_t *rule) {
+	p4key_elem_t *key;
+	uint32_t status;
+	if ((status = createKeys(info, table_id, match_key, &key)) != P4DEV_OK) {
+		return status;
+	}
+
+	if ((status = p4rule_add_key_element(rule, key)) != P4DEV_OK) return status;
 
 	return P4DEV_OK;
 }
@@ -142,7 +169,10 @@ uint32_t addAction(const pi_p4info_t *info, const pi_action_data_t *action_data,
 
 extern "C" {
 
+//! Adds an entry to a table. Trying to add an entry that already exists should
+//! return an error, unless the \p overwrite flag is set.
 pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry, int overwrite, pi_entry_handle_t *entry_handle) {
+	// NOTE: We currently don't care, whether the rule already exists, overwrite flag isn't there yet
 	(void) overwrite; ///< We cannot determine if the rule is overwritten, yet
 	(void) session_handle; ///< No support for sessions
 	
@@ -185,80 +215,197 @@ pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t
 	return PI_STATUS_SUCCESS;
 }
 
+//! Sets the default entry for a table. Should return an error if the default
+//! entry was statically configured and set as const in the P4 program.
 pi_status_t _pi_table_default_action_set(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id, const pi_table_entry_t *table_entry) {
 	(void) session_handle;
-	(void) dev_tgt;
-	(void) table_id;
-	(void) table_entry;
+
+	const pi_p4info_t *info = infos[dev_tgt.dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_tgt.dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	// Initialize rule object
+	p4rule_t *rule = createRule(tableName, info, table_id);
+	if (rule == NULL) {
+		std::cerr << "Cannot create rule\n";
+		return pi_status_t(PI_STATUS_TARGET_ERROR);
+	}
+	p4rule_mark_default(rule);
+	uint32_t status;
+	if ((status = addAction(info, table_entry->entry.action_data, rule)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	// Insert rule to table
+	if ((status = table->insertDefaultRule(rule)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
 	return PI_STATUS_SUCCESS;
 }
 
+//! Resets the default entry for a table, as previously set with
+//! pi_table_default_action_set, to the original default action (as specified in
+//! the P4 program).
 pi_status_t _pi_table_default_action_reset(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id) {
 	(void) session_handle;
-	(void) dev_tgt;
-	(void) table_id;
+
+	const pi_p4info_t *info = infos[dev_tgt.dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_tgt.dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	uint32_t status;
+	if ((status = table->resetDefaultRule()) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
 	return PI_STATUS_SUCCESS;
 }
 
+//! Retrieve the default entry for a table.
 pi_status_t _pi_table_default_action_get(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_entry_t *table_entry) {
 	(void) session_handle;
 	(void) dev_id;
 	(void) table_id;
 	(void) table_entry;
-	return PI_STATUS_SUCCESS;
+	return PI_STATUS_RPC_NOT_IMPLEMENTED;
 }
 
+//! Need to be called after pi_table_default_action_get, once you wish the
+//! memory to be released.
 pi_status_t _pi_table_default_action_done(pi_session_handle_t session_handle, pi_table_entry_t *table_entry) {
 	(void) session_handle;
 	(void) table_entry;
-	return PI_STATUS_SUCCESS;
+	return PI_STATUS_RPC_NOT_IMPLEMENTED;
 }
 
+//! Delete an entry from a table using the entry handle. Should return an error
+//! if entry does not exist.
 pi_status_t _pi_table_entry_delete(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_entry_handle_t entry_handle) {
 	(void) session_handle;
-	(void) dev_id;
-	(void) table_id;
-	(void) entry_handle;
-	return PI_STATUS_SUCCESS;
-}
-pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key) {
-	(void) session_handle;
-	(void) dev_id;
-	(void) table_id;
-	(void) match_key;
+
+	const pi_p4info_t *info = infos[dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	uint32_t status;
+	if ((status = table->deleteRule(entry_handle)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
 	return PI_STATUS_SUCCESS;
 }
 
+//! Delete an entry from a table using the match key. Should return an error
+//! if entry does not exist.
+pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key) {
+	(void) session_handle;
+
+	const pi_p4info_t *info = infos[dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	p4key_elem_t *key;
+	uint32_t status, index;
+	if ((status = createKeys(info, table_id, match_key, &key))) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	if ((status = table->findRule(key, index)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	if ((status = table->deleteRule(index)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	return PI_STATUS_SUCCESS;
+}
+
+//! Modify an existing entry using the entry handle. Should return an error if
+//! entry does not exist.
 pi_status_t _pi_table_entry_modify(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_entry_handle_t entry_handle, const pi_table_entry_t *table_entry) {
 	(void) session_handle;
 	(void) dev_id;
 	(void) table_id;
 	(void) entry_handle;
 	(void) table_entry;
-	return PI_STATUS_SUCCESS;
+
+	/*const pi_p4info_t *info = infos[dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}*/
+
+	return PI_STATUS_RPC_NOT_IMPLEMENTED;
 }
 
+//! Modify an existing entry using the match key. Should return an error if
+//! entry does not exist.
 pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry) {
 	(void) session_handle;
 	(void) dev_id;
 	(void) table_id;
 	(void) match_key;
 	(void) table_entry;
-	return PI_STATUS_SUCCESS;
+	return PI_STATUS_RPC_NOT_IMPLEMENTED;
 }
 
+//! Retrieve all entries in table as one big blob.
 pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_fetch_res_t *res) {
 	(void) session_handle;
 	(void) dev_id;
 	(void) table_id;
 	(void) res;
-	return PI_STATUS_SUCCESS;
+	return PI_STATUS_RPC_NOT_IMPLEMENTED;
 }
 
+//! Need to be called after a pi_table_entries_fetch, once you wish the memory
+//! to be released.
 pi_status_t _pi_table_entries_fetch_done(pi_session_handle_t session_handle, pi_table_fetch_res_t *res) {
 	(void) session_handle;
 	(void) res;
-	return PI_STATUS_SUCCESS;
+	return PI_STATUS_RPC_NOT_IMPLEMENTED;
 }
 
 }
