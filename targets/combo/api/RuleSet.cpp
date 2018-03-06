@@ -42,7 +42,7 @@ uint32_t RuleSet::writeRules() {
 		return status;
 	}
 	
-	return status;
+	return P4DEV_OK;
 }
 
 uint32_t RuleSet::invalidateRule(const uint32_t index) {
@@ -61,7 +61,6 @@ bool RuleSet::isInvalidRule(p4rule_t *rule) {
 	std::cout << "RuleSet::isInvalidRule(...)\n";
 	#endif
 	
-	assert(rule != NULL);
 	// TODO: rewrite
 	return rule->table_name == NULL;
 }
@@ -83,6 +82,7 @@ uint32_t RuleSet::insertRule(p4rule_t *rule, uint32_t &index) {
 	
 	uint32_t status = writeRules();
 	if (status != P4DEV_OK) {
+		rules.pop_back();
 		return status;
 	}
 	
@@ -90,13 +90,21 @@ uint32_t RuleSet::insertRule(p4rule_t *rule, uint32_t &index) {
 	return P4DEV_OK;
 }
 
-uint32_t RuleSet::modifyRule() {
+uint32_t RuleSet::modifyRule(p4rule *rule, uint32_t &index) {
 	#ifdef DEBUG_LOGS
 	std::cout << "RuleSet::modifyRule(...)\n";
 	#endif
 	
-	// TODO: this
-	return P4DEV_ERROR;
+	p4rule_free(rules[index]);
+	rules[index] = rule;
+	
+	uint32_t status = writeRules();
+	if (status != P4DEV_OK) {
+		rules.pop_back();
+		return status;
+	}
+	
+	return P4DEV_OK;
 }
 
 uint32_t RuleSet::deleteRule(const uint32_t index) {
@@ -104,14 +112,18 @@ uint32_t RuleSet::deleteRule(const uint32_t index) {
 	std::cout << "RuleSet::deleteRule(...)\n";
 	#endif
 	
-	uint32_t status = invalidateRule(index);
-	if (status != P4DEV_OK) {
+	uint32_t status;;
+	if ((status = invalidateRule(index)) != P4DEV_OK) {
 		return status;
 	}
 	
 	deletedRulesCnt++;
 	if ((rules.size() * 100 / deletedRulesCnt) >= DELETE_THRESHOLD_PERCENTAGE) {
 		cleanup();
+	}
+	
+	if ((status = writeRules()) != P4DEV_OK) {
+		return status;
 	}
 	
 	return status;

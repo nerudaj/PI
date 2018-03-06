@@ -21,7 +21,7 @@ bool Table::keysMatch(const p4key_elem_t* first, const p4key_elem_t* second) {
 	return comparators[type](first, second);
 }
 
-uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index) {
+uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index, bool overwrite) {
 	#ifdef DEBUG_LOGS
 	std::cout << "Table::insertRule(...)\n";
 	#endif
@@ -29,16 +29,35 @@ uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index) {
 	assert(rule != NULL);
 	assert(strcmp(rule->table_name, name.c_str()) == 0);
 
+	// Check table capacity
 	if (capacity == indices.size()) {
-		std::cerr << "Table full\n";
+		std::cerr << "ERROR:Table - Table full\n";
 		return P4DEV_ERROR; // TODO: P4DEV_TABLE_FULL;
 	}
 	
-	uint32_t status = ruleset->insertRule(rule, index);
-	if (status != P4DEV_OK) {
+	// Verify rule is not already here
+	uint32_t status, auxIndex;
+	if ((status = findRule(rule->key, auxIndex)) == P4DEV_OK) {
+		// If yes, we might overwrite it
+		if (overwrite) {
+			if ((status = ruleset->modifyRule(rule, auxIndex)) != P4DEV_OK) {
+				return status;
+			}
+			
+			return P4DEV_OK;
+		}
+		else {
+			std::cerr << "ERROR:Table - Rule already in the table\n";
+			return P4DEV_ERROR;
+		}
+	}
+	
+	// Insert to ruleset
+	if ((status = ruleset->insertRule(rule, index)) != P4DEV_OK) {
 		return status;
 	}
 	
+	// Build index
 	try {
 		indices.push_back(index);
 	}
@@ -47,10 +66,46 @@ uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index) {
 		return P4DEV_ALLOCATE_ERROR;
 	}
 	
-	return status;
+	return P4DEV_OK;
 }
 
-uint32_t Table::modifyRule(uint32_t index, p4rule_t *rule) {
+uint32_t Table::insertDefaultRule(p4rule_t *rule) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::insertDefaultRule(...)\n";
+	#endif
+	
+	assert(rule != NULL);
+	assert(strcmp(rule->table_name, name.c_str()) == 0);
+	
+	// Check table capacity
+	if (capacity == indices.size()) {
+		std::cerr << "ERROR:Table - Table full\n";
+		return P4DEV_ERROR; // TODO: P4DEV_TABLE_FULL;
+	}
+	
+	// Verify table does not have a default rule
+	if (hasDefaultRule()) {
+		return P4DEV_ERROR;
+	}
+	
+	// Insert to ruleset
+	uint32_t status, index;
+	if ((status = ruleset->insertRule(rule, index)) != P4DEV_OK) {
+		return status;
+	}
+	
+	// Build index
+	try {
+		indices.push_back(index);
+		defaultRuleIndex = indices.size() - 1;
+	}
+	catch (std::bad_alloc& ba) {
+		ruleset->deleteRule(index);
+		return P4DEV_ALLOCATE_ERROR;
+	}
+}
+
+uint32_t Table::modifyRule(p4rule_t *rule, uint32_t index) {
 	#ifdef DEBUG_LOGS
 	std::cout << "Table::modifyRule(...)\n";
 	#endif
@@ -70,8 +125,31 @@ uint32_t Table::deleteRule(uint32_t index) {
 		return P4DEV_ERROR;
 	}
 	
-	ruleset->deleteRule(indices[index]);
+	uint32_t status, rulesetIndex = indices[index];
 	indices.erase(indices.begin() + index);
+	if ((status = ruleset->deleteRule(rulesetIndex)) != P4DEV_OK) {
+		indices.erase(indices.begin() + index);
+		return status;
+	}
+	
+	return P4DEV_OK;
+}
+
+uint32_t Table::resetDefaultRule() {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::resetDefaultRule(...)\n";
+	#endif
+	
+	if (defaultRuleIndex == capacity) {
+		return P4DEV_ERROR;
+	}
+	
+	uint32_t status;
+	if ((status = deleteRule(defaultRuleIndex)) != P4DEV_OK) {
+		return status;
+	}
+	
+	defaultRuleIndex = capacity;
 	
 	return P4DEV_OK;
 }
@@ -111,6 +189,19 @@ uint32_t Table::initialize(const char *name, RuleSet *rulesetPtr, p4dev_t *devic
 	if (status != P4DEV_OK) {
 		return status;
 	}
+	defaultRuleIndex = capacity;
+	
+	/*
+	NOTE: Preallocate memory?
+	try {
+		indices.reserve(capacity);
+	}
+	catch (std::bad_alloc &e) {
+		return P4DEV_ALLOCATE_ERROR;
+	}
+	catch (std::length_error &e) {
+		return P4DEV_ALLOCATE_ERROR;
+	}*/
 	
 	ruleset = rulesetPtr;
 	
@@ -141,6 +232,7 @@ void Table::recomputeIndices() {
 		rule = ruleset->getRule(i);
 		
 		if (strcmp(rule->table_name, name.c_str()) == 0) {
+			// NOTE: Realloc might have happened
 			indices.push_back(i);
 		}
 	}

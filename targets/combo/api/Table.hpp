@@ -15,9 +15,11 @@ namespace p4 {
 		p4engine_type_t type; ///< Match engine used in the table
 		uint32_t capacity; ///< Maximum records a table can hold
 		std::vector<uint32_t> indices; ///< Indices of rules inside ruleset
+		uint32_t defaultRuleIndex; ///< Has value of capacity if there's no default rule
 		RuleSet *ruleset; ///< Pointer to class managing the rules
 		
 		bool keysMatch(const p4key_elem_t* first, const p4key_elem_t* second);
+		bool hasDefaultRule() const { return defaultRuleIndex != capacity; }
 		
 	public:
 		/**
@@ -25,25 +27,39 @@ namespace p4 {
 		 *  
 		 *  \param [in] rule Initialized rule object
 		 *  \param [out] index Index of rule within table
+		 *  \param [in] overwrite Force overwrite default rule
 		 *  \return P4DEV_TABLE_FULL if table is already at maximum capacity. 
 		 *  P4DEV_ALLOCATE_ERROR if the rule could not be stored in memory.
+		 *  P4DEV_ERROR if the rule already exists.
 		 *  P4DEV_OK on success.
 		 *  
 		 *  \details Inserted rule has to have matching table name and search 
-		 *  engine as the table you're inserting it into.
+		 *  engine as the table you're inserting it into. It also should not
+		 *  already exist, unless the overwrite flag is set.
 		 */
-		uint32_t insertRule(p4rule_t *rule, uint32_t &index);
+		uint32_t insertRule(p4rule_t *rule, uint32_t &index, bool overwrite = false);
+		
+		/**
+		 *  \brief Inserts default rule to the table
+		 *  
+		 *  \param [in] rule Initialized rule object
+		 *  \return P4DEV_TABLE_FULL if table is already at maximum capacity.
+		 *  P4DEV_ALLOCATE_ERROR if the rule could not be stored in memory.
+		 *  P4DEV_ERROR if table already has default rule.
+		 *  P4DEV_OK on success.
+		 */
+		uint32_t insertDefaultRule(p4rule_t *rule);
 		
 		/**
 		 *  \brief Brief description
 		 *  
-		 *  \param [in] index Description for index
-		 *  \param [in] rule Description for rule
+		 *  \param [in] rule Initialized rule object
+		 *  \param [in] index Index of rule to modify
 		 *  \return Return description
 		 *  
 		 *  \details More details
 		 */
-		uint32_t modifyRule(uint32_t index, p4rule_t *rule);
+		uint32_t modifyRule(p4rule_t *rule, uint32_t index);
 		
 		/**
 		 *  \brief Deletes a rule on a given index
@@ -56,6 +72,8 @@ namespace p4 {
 		 *  rules with greater index by decrementing by one.
 		 */
 		uint32_t deleteRule(uint32_t index);
+		
+		uint32_t resetDefaultRule();
 		
 		/**
 		 *  \brief Get an index of a certain rule based on its key
@@ -70,6 +88,10 @@ namespace p4 {
 		 *  of index is modified. Otherwise its value is undefined.
 		 */
 		uint32_t findRule(p4key_elem_t* key, uint32_t &index);
+		
+		uint32_t getRule(uint32_t index, p4rule_t **rule);
+		
+		uint32_t getDefaultRule(p4rule_t **rule);
 		
 		/**
 		 *  \brief Prepares instantion to be used

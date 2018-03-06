@@ -38,7 +38,7 @@ namespace p4 {
 		 *  
 		 *  \details More details
 		 */
-		uint32_t modifyRule();
+		uint32_t modifyRule(p4rule *rule, uint32_t &index);
 		
 		/**
 		 *  \brief Brief description
