@@ -192,6 +192,7 @@
     <ClCompile Include="targets\combo\dummy\p4dev.c" />
     <ClCompile Include="targets\combo\dummy\p4dev_types.c" />
     <ClCompile Include="targets\combo\dummy\p4rule.c" />
+    <ClCompile Include="targets\combo\helpers.cpp" />
     <ClCompile Include="targets\combo\pi_act_prof_imp.cpp" />
     <ClCompile Include="targets\combo\pi_counter_imp.cpp" />
     <ClCompile Include="targets\combo\pi_imp.cpp" />
@@ -418,6 +419,7 @@
     <ClInclude Include="targets\combo\dummy\p4dev.h" />
     <ClInclude Include="targets\combo\dummy\p4dev_types.h" />
     <ClInclude Include="targets\combo\dummy\p4rule.h" />
+    <ClInclude Include="targets\combo\helpers.hpp" />
     <ClInclude Include="targets\dummy\func_counter.h" />
     <ClInclude Include="targets\rpc\pi_rpc.h" />
     <ClInclude Include="tests\utils.h" />

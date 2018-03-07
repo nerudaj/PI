@@ -735,6 +735,9 @@
     <ClCompile Include="third_party\unity\src\unity_fixture.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="targets\combo\helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cli\commands.h">
@@ -1212,6 +1215,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="third_party\unity\include\unity\unity_internals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targets\combo\helpers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
