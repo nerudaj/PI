@@ -5,6 +5,8 @@
 
 using p4::Table;
 
+#define UINT32_MAX 0xffffffff
+
 bool Table::keysMatch(const p4key_elem_t* first, const p4key_elem_t* second) {
 	#ifdef DEBUG_LOGS
 	std::cout << "Table::keysMatch(...)\n";
@@ -89,20 +91,12 @@ uint32_t Table::insertDefaultRule(p4rule_t *rule) {
 	}
 	
 	// Insert to ruleset
-	uint32_t status, index;
-	if ((status = ruleset->insertRule(rule, index)) != P4DEV_OK) {
+	uint32_t status;
+	if ((status = ruleset->insertRule(rule, defaultRuleIndex)) != P4DEV_OK) {
 		return status;
 	}
 	
-	// Build index
-	try {
-		indices.push_back(index);
-		defaultRuleIndex = indices.size() - 1;
-	}
-	catch (std::bad_alloc& ba) {
-		ruleset->deleteRule(index);
-		return P4DEV_ALLOCATE_ERROR;
-	}
+	return P4DEV_OK;
 }
 
 uint32_t Table::modifyRule(p4rule_t *rule, uint32_t index) {
@@ -140,16 +134,16 @@ uint32_t Table::resetDefaultRule() {
 	std::cout << "Table::resetDefaultRule(...)\n";
 	#endif
 	
-	if (defaultRuleIndex == capacity) {
+	if (not hasDefaultRule()) {
 		return P4DEV_ERROR;
 	}
 	
 	uint32_t status;
-	if ((status = deleteRule(defaultRuleIndex)) != P4DEV_OK) {
+	if ((status = ruleset->deleteRule(defaultRuleIndex)) != P4DEV_OK) {
 		return status;
 	}
 	
-	defaultRuleIndex = capacity;
+	defaultRuleIndex = UINT32_MAX;
 	
 	return P4DEV_OK;
 }
@@ -171,6 +165,30 @@ uint32_t Table::findRule(p4key_elem_t* key, uint32_t &index) {
 	return P4DEV_ERROR;
 }
 
+p4rule_t *p4::Table::getRule(uint32_t index) {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::getRule(...)\n";
+	#endif
+
+	if (index >= indices.size()) {
+		return NULL;
+	}
+
+	return ruleset->getRule(indices[index]);
+}
+
+p4rule_t * p4::Table::getDefaultRule() {
+	#ifdef DEBUG_LOGS
+	std::cout << "Table::getDefaultRule(...)\n";
+	#endif
+
+	if (not hasDefaultRule()) {
+		return NULL;
+	}
+
+	return ruleset->getRule(defaultRuleIndex);
+}
+
 uint32_t Table::initialize(const char *name, RuleSet *rulesetPtr, p4dev_t *deviceInfoPtr) {
 	#ifdef DEBUG_LOGS
 	std::cout << "Table::initialize(...)\n";
@@ -189,7 +207,7 @@ uint32_t Table::initialize(const char *name, RuleSet *rulesetPtr, p4dev_t *devic
 	if (status != P4DEV_OK) {
 		return status;
 	}
-	defaultRuleIndex = capacity;
+	defaultRuleIndex = UINT32_MAX;
 	
 	/*
 	NOTE: Preallocate memory?
@@ -232,8 +250,13 @@ void Table::recomputeIndices() {
 		rule = ruleset->getRule(i);
 		
 		if (strcmp(rule->table_name, name.c_str()) == 0) {
-			// NOTE: Realloc might have happened
-			indices.push_back(i);
+			if (rule->def) {
+				defaultRuleIndex = i;
+			}
+			else {
+				// NOTE: Realloc might have happened
+				indices.push_back(i);
+			}
 		}
 	}
 }
@@ -248,6 +271,7 @@ uint32_t Table::clear() {
 		return status;
 	}
 	
+	defaultRuleIndex = UINT32_MAX;
 	ruleset->clearTable(indices);
 	indices.clear();
 	

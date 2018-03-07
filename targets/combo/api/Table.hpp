@@ -19,7 +19,7 @@ namespace p4 {
 		RuleSet *ruleset; ///< Pointer to class managing the rules
 		
 		bool keysMatch(const p4key_elem_t* first, const p4key_elem_t* second);
-		bool hasDefaultRule() const { return defaultRuleIndex != capacity; }
+		bool hasDefaultRule() const { return defaultRuleIndex != 0xffffffff; }
 		
 	public:
 		/**
@@ -73,6 +73,9 @@ namespace p4 {
 		 */
 		uint32_t deleteRule(uint32_t index);
 		
+		/**
+		 *  \brief Restores default rule from p4 program for the table
+		 */
 		uint32_t resetDefaultRule();
 		
 		/**
@@ -89,9 +92,35 @@ namespace p4 {
 		 */
 		uint32_t findRule(p4key_elem_t* key, uint32_t &index);
 		
-		uint32_t getRule(uint32_t index, p4rule_t **rule);
+		/**
+		 *  \brief Get pointer to rule object
+		 *  
+		 *  \param [in] index Index of rule within table
+		 *  \return NULL if index is out of bounds, pointer to rule otherwise
+		 *  
+		 *  \note Calling deleteRule and deleteDefaultRule can affect validity
+		 *  of your pointers.
+		 */
+		p4rule_t *getRule(uint32_t index);
 		
-		uint32_t getDefaultRule(p4rule_t **rule);
+		/**
+		 *  \brief Get pointer to default rule object
+		 *  
+		 *  \return NULL if default rule was not set, pointer to rule otherwise
+		 *  
+		 *  \details You can only retrieve default rule you've set by yourself,
+		 *  rule defined in p4 program cannot be retrieved this way.
+		 */
+		p4rule_t *getDefaultRule();
+
+		/**
+		 *  \brief Brief description
+		 *  
+		 *  \return Return description
+		 *  
+		 *  \details More details
+		 */
+		uint32_t getTableSize() const { return indices.size(); }
 		
 		/**
 		 *  \brief Prepares instantion to be used
