@@ -26,7 +26,7 @@ uint32_t RuleSet::writeRules() {
 	#endif
 	
 	uint32_t status;
-	status = p4dev_enable(deviceInfo);	
+	status = p4dev_disable(deviceInfo);
 	if (status != P4DEV_OK) {
 		return status;
 	}
@@ -37,7 +37,7 @@ uint32_t RuleSet::writeRules() {
 		return status;
 	}
 	
-	status = p4dev_disable(deviceInfo);
+	status = p4dev_enable(deviceInfo);
 	if (status != P4DEV_OK) {
 		return status;
 	}
