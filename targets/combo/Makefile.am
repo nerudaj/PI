@@ -15,6 +15,7 @@ pi_learn_imp.cpp \
 api/Device.cpp \
 api/Table.cpp \
 api/RuleSet.cpp \
-devices.cpp 
+devices.cpp \
+helpers.cpp
 
 lib_LTLIBRARIES = libpi_combo.la

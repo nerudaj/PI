@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include "devices.hpp"
+#include "helpers.hpp"
 
 p4rule_t *createRule(const char *tableName, const pi_p4info_t *info, pi_p4_id_t table_id) {
 	// NOTE: Based on whether frontend or backend checks validity of incoming rules, this might get rewritten
@@ -33,12 +34,12 @@ p4rule_t *createRule(const char *tableName, const pi_p4info_t *info, pi_p4_id_t 
 	auto matchFields = pi_p4info_table_get_match_fields(info, table_id, &matchFieldsSize);
 	
 	// Determine engine of rule
-	p4engine_type_t engineType = P4ENGINE_TCAM;
-	bool lpmSet = true;
+	p4engine_type_t engineType = P4ENGINE_UNKNOWN;
 	for (std::size_t i = 0; i < matchFieldsSize; i++) {
-		if (matchFields[i] != PI_P4INFO_MATCH_TYPE_LPM) lpmSet = false;
+		if (engineType == P4ENGINE_UNKNOWN) engineType = translateEngine(matchFields[i]);
+		else if (engineType != translateEngine(matchFields[i])) return NULL;
 	}
-	if (lpmSet) engineType = P4ENGINE_LPM;
+	if (engineType == P4ENGINE_UNKNOWN) return NULL;
 
 	p4rule_t *result = p4rule_create(tableName, engineType);
 	return result;
@@ -67,7 +68,19 @@ uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match
 			break;
 
 		case PI_P4INFO_MATCH_TYPE_EXACT:
-			return P4DEV_NOT_IMPLEMENTED;
+			value = new uint8_t[bytewidth];
+			if (value == NULL) return P4DEV_ALLOCATE_ERROR;
+			memcpy(value, data, bytewidth);
+			data += bytewidth;
+
+			if (last == NULL) {
+				(*key) = cuckoo_p4key_create(keyName, bytewidth, value);
+				last = *key;
+			}
+			else {
+				last->next = cuckoo_p4key_create(keyName, bytewidth, value);
+				last = last->next;
+			}
 			break;
 
 		case PI_P4INFO_MATCH_TYPE_LPM:
@@ -282,18 +295,38 @@ pi_status_t _pi_table_default_action_reset(pi_session_handle_t session_handle, p
 //! Retrieve the default entry for a table.
 pi_status_t _pi_table_default_action_get(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_entry_t *table_entry) {
 	(void) session_handle;
-	(void) dev_id;
-	(void) table_id;
-	(void) table_entry;
-	return PI_STATUS_RPC_NOT_IMPLEMENTED;
+
+	const pi_p4info_t *info = infos[dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	p4rule_t *defaultRule = table->getDefaultRule();
+	if (defaultRule == NULL) {
+		std::cerr << "No default rule set\n";
+		return PI_STATUS_TARGET_ERROR;
+	}
+
+	return retrieveEntry(info, defaultRule->action, defaultRule->param, table_entry);
 }
 
 //! Need to be called after pi_table_default_action_get, once you wish the
 //! memory to be released.
 pi_status_t _pi_table_default_action_done(pi_session_handle_t session_handle, pi_table_entry_t *table_entry) {
 	(void) session_handle;
-	(void) table_entry;
-	return PI_STATUS_RPC_NOT_IMPLEMENTED;
+
+	if (table_entry->entry_type == PI_ACTION_ENTRY_TYPE_DATA) {
+		pi_action_data_t *action_data = table_entry->entry.action_data;
+		if (action_data) delete[] action_data;
+	}
+
+	return PI_STATUS_SUCCESS;
 }
 
 //! Delete an entry from a table using the entry handle. Should return an error
@@ -394,18 +427,105 @@ pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_d
 //! Retrieve all entries in table as one big blob.
 pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_fetch_res_t *res) {
 	(void) session_handle;
-	(void) dev_id;
-	(void) table_id;
 	(void) res;
-	return PI_STATUS_RPC_NOT_IMPLEMENTED;
+
+	const pi_p4info_t *info = infos[dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	res->num_entries = table->getTableSize();
+	size_t dataSize = 0U;
+
+	dataSize += res->num_entries * sizeof(s_pi_entry_handle_t);
+	dataSize += res->num_entries * sizeof(s_pi_action_entry_type_t);
+	dataSize += res->num_entries * sizeof(uint32_t);  // for priority
+	dataSize += res->num_entries * sizeof(uint32_t);  // for properties
+	dataSize += res->num_entries * sizeof(uint32_t);  // for direct resources
+
+	res->mkey_nbytes = pi_p4info_table_match_key_size(info, table_id);
+	dataSize += res->num_entries * res->mkey_nbytes;
+
+	size_t num_actions;
+	auto actionIds = pi_p4info_table_get_actions(info, table_id, &num_actions);
+	auto actionMap = computeActionSizes(info, actionIds, num_actions);
+
+	for (uint32_t i = 0; i < res->num_entries; i++) {
+		auto *rule = table->getRule(i);
+		
+		dataSize += actionMap.at(rule->action).size;
+		dataSize += sizeof(s_pi_p4_id_t); // Action ID
+		dataSize += sizeof(uint32_t); // Action params bytewidth
+	}
+
+	char *data = new char[dataSize];
+	if (data == NULL) return PI_STATUS_ALLOC_ERROR;
+
+	// in some cases, we do not use the whole buffer
+	std::fill(data, data + dataSize, 0);
+	res->entries_size = dataSize;
+	res->entries = data;
+
+	for (uint32_t i = 0; i < res->num_entries; i++) {
+		auto *rule = table->getRule(i);
+
+		data += emit_entry_handle(data, i);
+		// We don't have priority yet
+		data += emit_uint32(data, 0); // priority
+
+		p4key_elem_t *key = rule->key;
+		while (key != NULL) {
+			switch (rule->engine) {
+			case P4ENGINE_TCAM: // ternary
+				std::memcpy(data, key->value, key->val_size);
+				data += key->val_size;
+				std::memcpy(data, key->opt.mask, key->val_size);
+				data += key->val_size;
+				break;
+
+			case P4ENGINE_LPM:
+				std::memcpy(data, key->value, key->val_size);
+				data += key->val_size;
+				data += emit_uint32(data, key->opt.prefix_len);
+				break;
+
+			case P4ENGINE_CUCKOO: //Exact
+				std::memcpy(data, key->value, key->val_size);
+				data += key->val_size;
+				break;
+			}
+
+			key = key->next;
+		}
+
+		// Our actions are always direct
+		data += emit_action_entry_type(data, PI_ACTION_ENTRY_TYPE_DATA);
+		auto actionProperties = actionMap.at(rule->action);
+		data += emit_p4_id(data, actionProperties.id);
+		data += emit_uint32(data, actionProperties.size);
+		data = dumpActionData(info, data, actionProperties.id, rule->param);
+
+		data += emit_uint32(data, 0);  // properties
+		data += emit_uint32(data, 0);  // TODO(antonin): direct resources
+	}
+
+	return PI_STATUS_SUCCESS;
 }
 
 //! Need to be called after a pi_table_entries_fetch, once you wish the memory
 //! to be released.
 pi_status_t _pi_table_entries_fetch_done(pi_session_handle_t session_handle, pi_table_fetch_res_t *res) {
 	(void) session_handle;
-	(void) res;
-	return PI_STATUS_RPC_NOT_IMPLEMENTED;
+	
+	delete[] res->entries;
+
+	return PI_STATUS_SUCCESS;
 }
 
 }
