@@ -148,17 +148,14 @@ uint32_t addKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match_ke
 	return P4DEV_OK;
 }
 
-uint32_t addAction(const pi_p4info_t *info, const pi_action_data_t *action_data, p4rule_t *rule) {
-	assert(info);
-	assert(action_data);
-
-	pi_p4_id_t actionID = action_data->action_id;
-	const char *actionData = action_data->data;
-	const char *actionName = pi_p4info_action_name_from_id(info, actionID);
+uint32_t createParams(const pi_p4info_t *info, const pi_p4_id_t actionID, const char *actionData, p4param_t **param) {
+	assert(info != NULL);
+	assert(actionData != NULL);
+	assert(param != NULL);
+	assert(*param == NULL);
 
 	uint32_t status;
-	if ((status = p4rule_add_action(rule, actionName)) != P4DEV_OK) return status;
-
+	p4param_t *last = NULL;
 	size_t paramIdsSize;
 	const pi_p4_id_t *paramIds = pi_p4info_action_get_params(info, actionID, &paramIdsSize);
 	for (size_t i = 0; i < paramIdsSize; i++) {
@@ -171,11 +168,44 @@ uint32_t addAction(const pi_p4info_t *info, const pi_action_data_t *action_data,
 		memcpy(data, actionData, paramBytewidth);
 		const char *paramName = pi_p4info_action_param_name_from_id(info, actionID, paramIds[i]);
 
-		p4param_t *param = p4param_create(paramName, paramBytewidth, data); // No need to test it, next call catches the error
-		if ((status = p4rule_add_param(rule, param)) != P4DEV_OK) return status;
+		if (*param == NULL) {
+			*param = p4param_create(paramName, paramBytewidth, data);
+			if (*param == NULL) return P4DEV_ALLOCATE_ERROR;
+			last = *param;
+		}
+		else {
+			last->next = p4param_create(paramName, paramBytewidth, data);
+			if (last->next == NULL) return P4DEV_ALLOCATE_ERROR;
+			last = last->next;
+		}
 
 		actionData += paramBytewidth;
 	}
+
+	return P4DEV_OK;
+}
+
+uint32_t addAction(const pi_p4info_t *info, const pi_action_data_t *action_data, p4rule_t *rule) {
+	assert(info);
+	assert(action_data);
+
+	pi_p4_id_t actionID = action_data->action_id;
+	const char *actionData = action_data->data;
+	const char *actionName = pi_p4info_action_name_from_id(info, actionID);
+
+	std::cerr << "Rule add action\n";
+
+	uint32_t status;
+	if ((status = p4rule_add_action(rule, actionName)) != P4DEV_OK) return status;
+
+	std::cerr << "Create params\n";
+
+	p4param_t *param = NULL;
+	if ((status = createParams(info, actionID, actionData, &param)) != P4DEV_OK) return status;
+
+	std::cerr << "Add params\n";
+
+	if ((status = p4rule_add_param(rule, param)) != P4DEV_OK) return status;
 
 	return P4DEV_OK;
 }
@@ -185,8 +215,6 @@ extern "C" {
 //! Adds an entry to a table. Trying to add an entry that already exists should
 //! return an error, unless the \p overwrite flag is set.
 pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry, int overwrite, pi_entry_handle_t *entry_handle) {
-	// NOTE: We currently don't care, whether the rule already exists, overwrite flag isn't there yet
-	(void) overwrite; ///< We cannot determine if the rule is overwritten, yet
 	(void) session_handle; ///< No support for sessions
 	
 	const pi_p4info_t *info = infos[dev_tgt.dev_id];
@@ -207,18 +235,22 @@ pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t
 		return pi_status_t(PI_STATUS_TARGET_ERROR);
 	}
 	uint32_t status;
+	std::cerr << "Adding keys\n";
 	if ((status = addKeys(info, table_id, match_key, rule)) != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
+	std::cerr << "Adding actions\n";
 	if ((status = addAction(info, table_entry->entry.action_data, rule)) != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
+
+	std::cerr << "Inserting into table\n";
 	
 	// Insert rule to table
 	uint32_t ruleIndex;
-	if ((status = table->insertRule(rule, ruleIndex)) != P4DEV_OK) {
+	if ((status = table->insertRule(rule, ruleIndex, overwrite)) != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -394,40 +426,6 @@ pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_d
 //! entry does not exist.
 pi_status_t _pi_table_entry_modify(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_entry_handle_t entry_handle, const pi_table_entry_t *table_entry) {
 	(void) session_handle;
-	(void) dev_id;
-	(void) table_id;
-	(void) entry_handle;
-	(void) table_entry;
-
-	/*const pi_p4info_t *info = infos[dev_id];
-	assert(info != NULL);
-
-	// Retrieve table handle
-	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_id].getTable(tableName);
-	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
-		return PI_STATUS_NETV_INVALID_OBJ_ID;
-	}*/
-
-	return PI_STATUS_RPC_NOT_IMPLEMENTED;
-}
-
-//! Modify an existing entry using the match key. Should return an error if
-//! entry does not exist.
-pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry) {
-	(void) session_handle;
-	(void) dev_id;
-	(void) table_id;
-	(void) match_key;
-	(void) table_entry;
-	return PI_STATUS_RPC_NOT_IMPLEMENTED;
-}
-
-//! Retrieve all entries in table as one big blob.
-pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_fetch_res_t *res) {
-	(void) session_handle;
-	(void) res;
 
 	const pi_p4info_t *info = infos[dev_id];
 	assert(info != NULL);
@@ -440,6 +438,87 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
+	pi_p4_id_t actionID = table_entry->entry.action_data->action_id;
+	const char *actionData = table_entry->entry.action_data->data;
+	const char *actionName = pi_p4info_action_name_from_id(info, actionID);
+
+	p4param_t *params = NULL;
+	uint32_t status;
+	if ((status = createParams(info, actionID, actionData, &params)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	if ((status = table->modifyRule(entry_handle, actionName, params)) != P4DEV_OK)  {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	return PI_STATUS_SUCCESS;
+}
+
+//! Modify an existing entry using the match key. Should return an error if
+//! entry does not exist.
+pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry) {
+	(void)session_handle;
+
+	const pi_p4info_t *info = infos[dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	if (table == NULL) {
+		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	uint32_t status, index;
+	p4key_elem_t *key;
+	if ((status = createKeys(info, table_id, match_key, &key)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	if ((status = table->findRule(key, index)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	pi_p4_id_t actionID = table_entry->entry.action_data->action_id;
+	const char *actionData = table_entry->entry.action_data->data;
+	const char *actionName = pi_p4info_action_name_from_id(info, actionID);
+
+	p4param_t *params = NULL;
+	if ((status = createParams(info, actionID, actionData, &params)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	if ((status = table->modifyRule(index, actionName, params)) != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+
+	return PI_STATUS_SUCCESS;
+}
+
+//! Retrieve all entries in table as one big blob.
+pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_fetch_res_t *res) {
+	(void) session_handle;
+
+	const pi_p4info_t *info = infos[dev_id];
+	assert(info != NULL);
+
+	// Retrieve table handle
+	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
+	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	if (table == NULL) {
+		return PI_STATUS_NETV_INVALID_OBJ_ID;
+	}
+
+	res->p4info = info;
+	res->num_direct_resources = res->num_entries;
 	res->num_entries = table->getTableSize();
 	size_t dataSize = 0U;
 
@@ -481,6 +560,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 
 		p4key_elem_t *key = rule->key;
 		while (key != NULL) {
+
 			switch (rule->engine) {
 			case P4ENGINE_TCAM: // ternary
 				std::memcpy(data, key->value, key->val_size);
@@ -507,6 +587,9 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 		// Our actions are always direct
 		data += emit_action_entry_type(data, PI_ACTION_ENTRY_TYPE_DATA);
 		auto actionProperties = actionMap.at(rule->action);
+
+		std::cerr << actionProperties.id << " " << actionProperties.size << "\n";
+
 		data += emit_p4_id(data, actionProperties.id);
 		data += emit_uint32(data, actionProperties.size);
 		data = dumpActionData(info, data, actionProperties.id, rule->param);
