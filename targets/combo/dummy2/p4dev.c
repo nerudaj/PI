@@ -104,12 +104,12 @@ const uint32_t TABLE_COUNT = 3;
 
 char TABLE_NAMES[][16] = {
 	"ipv4_lpm",
-	"send_frame",
-	"forward"
+	"forward",
+	"tcam"
 };
 
 uint32_t TABLE_CAPACITIES[] = {
-	2, 16, 128
+	2, 4, 8
 };
 
 p4engine_type_t TABLE_TYPES[] = {
