@@ -104,11 +104,16 @@ API uint32_t p4rule_add_param(p4rule_t * rule, p4param_t * param) {
     if (!rule || !param)
         return 1;
 
-    /* Add the parameter at the beginning of the list */
-    param->next = rule->param;
-    rule->param  = param;
+    if (rule->param == NULL) {
+        rule->param = param;
+        return P4DEV_OK;
+    }
+    
+    p4param_t *iter = rule->param;
+    while (iter->next != NULL) iter = iter->next;
+    iter->next = param;
 
-    return 0;
+    return P4DEV_OK;
 }
 
 /*!

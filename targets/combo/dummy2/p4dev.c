@@ -291,31 +291,10 @@ API p4engine_type_t  p4dev_get_table_type(const p4dev_t* dev, const char* name) 
 }
 
 API uint32_t p4dev_insert_rules(const p4dev_t* dev, const p4rule_t** p4rules, uint32_t rule_count) {
-    /* Some basic sanity check of the input */
-    if(!dev) {
-        return P4DEV_NO_DEV;
-    }
-
-    /* Check if passed rule parameters make sense */
-    if(rule_count > 0 && !p4rules) {
-        return P4DEV_ERROR; 
-    }
-
-    /* Check if all parameters are for the same table */
-    const char* ref_table_name = p4rules[0]->table_name;
-    for(uint32_t i = 1; i < rule_count; i++) {
-        if(!strncmp(ref_table_name,p4rules[i]->table_name,255)) {
-            return P4DEV_ERROR;
-        }
-    }
-
-    /* Get the engine and call the insertion handler */
-    const engine_map_t* hnd = get_table_handler(dev,ref_table_name);
-    if(!hnd) {
-        return P4DEV_ERROR;
-    } 
-
-
-    return hnd->callback.insert_rules(dev,p4rules,rule_count);
+	#ifdef DEBUG_LOGS
+	printf("p4dev: Insert rules. Rule count: %d\n", rule_count);
+	#endif
+	
+	return P4DEV_OK;
 }
 
