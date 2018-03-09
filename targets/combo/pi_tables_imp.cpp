@@ -193,19 +193,17 @@ uint32_t addAction(const pi_p4info_t *info, const pi_action_data_t *action_data,
 	const char *actionData = action_data->data;
 	const char *actionName = pi_p4info_action_name_from_id(info, actionID);
 
-	std::cerr << "Rule add action\n";
-
 	uint32_t status;
 	if ((status = p4rule_add_action(rule, actionName)) != P4DEV_OK) return status;
-
-	std::cerr << "Create params\n";
 
 	p4param_t *param = NULL;
 	if ((status = createParams(info, actionID, actionData, &param)) != P4DEV_OK) return status;
 
-	std::cerr << "Add params\n";
-
-	if ((status = p4rule_add_param(rule, param)) != P4DEV_OK) return status;
+	if (param != NULL) {
+		if ((status = p4rule_add_param(rule, param)) != P4DEV_OK) {
+			return status;
+		}
+	}
 
 	return P4DEV_OK;
 }
@@ -235,18 +233,14 @@ pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t
 		return pi_status_t(PI_STATUS_TARGET_ERROR);
 	}
 	uint32_t status;
-	std::cerr << "Adding keys\n";
 	if ((status = addKeys(info, table_id, match_key, rule)) != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
-	std::cerr << "Adding actions\n";
 	if ((status = addAction(info, table_entry->entry.action_data, rule)) != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
-
-	std::cerr << "Inserting into table\n";
 	
 	// Insert rule to table
 	uint32_t ruleIndex;
