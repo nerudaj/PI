@@ -166,7 +166,7 @@ uint32_t Table::findRule(p4key_elem_t* key, uint32_t &index) {
 	
 	for (uint32_t i = 0; i < indices.size(); i++) {
 		if (keysMatch(ruleset->getRule(indices[i])->key, key)) {
-			index = indices[i];
+			index = i;
 			return P4DEV_OK;
 		}
 	}
