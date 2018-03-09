@@ -90,19 +90,45 @@ uint32_t RuleSet::insertRule(p4rule_t *rule, uint32_t &index) {
 	return P4DEV_OK;
 }
 
-uint32_t RuleSet::modifyRule(p4rule *rule, uint32_t &index) {
+uint32_t RuleSet::overwriteRule(p4rule_t *rule, uint32_t index) {
 	#ifdef DEBUG_LOGS
-	std::cout << "RuleSet::modifyRule(...)\n";
+	std::cout << "RuleSet::overwriteRule(...)\n";
 	#endif
+	
+	assert(rule != NULL);
+	
+	if (index >= rules.size()) {
+		return P4DEV_ERROR;
+	}
 	
 	p4rule_free(rules[index]);
 	rules[index] = rule;
 	
-	uint32_t status = writeRules();
-	if (status != P4DEV_OK) {
-		rules.pop_back();
+	uint32_t status;
+	if ((status = writeRules()) != P4DEV_OK) {
 		return status;
 	}
+	
+	return P4DEV_OK;
+}
+
+uint32_t RuleSet::modifyRule(uint32_t &index, const char *actionName, p4param_t *params) {
+	#ifdef DEBUG_LOGS
+	std::cout << "RuleSet::modifyRule(...)\n";
+	#endif
+	
+	p4rule *rule = getRule(index);
+	assert(rule != NULL);
+	
+	uint32_t status;
+	
+	free((char *)rule->action);
+	if ((status = p4rule_add_action(rule, actionName)) != P4DEV_OK) return status;
+	
+	p4param_free(rule->param);
+	if ((status = p4rule_add_param(rule, params)) != P4DEV_OK) return status;
+	
+	if ((status = writeRules()) != P4DEV_OK) return status;
 	
 	return P4DEV_OK;
 }

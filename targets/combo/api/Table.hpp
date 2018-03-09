@@ -53,13 +53,14 @@ namespace p4 {
 		/**
 		 *  \brief Brief description
 		 *  
-		 *  \param [in] rule Initialized rule object
 		 *  \param [in] index Index of rule to modify
+		 *  \param [in] actionName Name of the new action
+		 *  \param [in] params Parameters of the new action
 		 *  \return Return description
 		 *  
 		 *  \details More details
 		 */
-		uint32_t modifyRule(p4rule_t *rule, uint32_t index);
+		uint32_t modifyRule(uint32_t index, const char *actionName, p4param_t *params);
 		
 		/**
 		 *  \brief Deletes a rule on a given index

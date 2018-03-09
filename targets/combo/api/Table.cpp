@@ -42,7 +42,7 @@ uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index, bool overwrite) {
 	if ((status = findRule(rule->key, auxIndex)) == P4DEV_OK) {
 		// If yes, we might overwrite it
 		if (overwrite) {
-			if ((status = ruleset->modifyRule(rule, auxIndex)) != P4DEV_OK) {
+			if ((status = ruleset->overwriteRule(rule, auxIndex)) != P4DEV_OK) {
 				return status;
 			}
 			
@@ -99,15 +99,24 @@ uint32_t Table::insertDefaultRule(p4rule_t *rule) {
 	return P4DEV_OK;
 }
 
-uint32_t Table::modifyRule(p4rule_t *rule, uint32_t index) {
+uint32_t Table::modifyRule(uint32_t index, const char *actionName, p4param_t *params) {
 	#ifdef DEBUG_LOGS
 	std::cout << "Table::modifyRule(...)\n";
 	#endif
 	
-	assert(rule != NULL);
-	
-	// TODO: this
-	return P4DEV_ERROR;
+	assert(actionName != NULL);
+	assert(params != NULL);
+
+	if (index >= indices.size()) {
+		return P4DEV_ERROR;
+	}
+
+	uint32_t status;
+	if ((status = ruleset->modifyRule(indices[index], actionName, params)) != P4DEV_OK) {
+		return P4DEV_OK;
+	}
+
+	return P4DEV_OK;
 }
 
 uint32_t Table::deleteRule(uint32_t index) {

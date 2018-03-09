@@ -24,7 +24,7 @@ namespace p4 {
 		 *  \brief Brief description
 		 *  
 		 *  \param [in] rule Description for rule
-		 *  \param [in] index Description for index
+		 *  \param [out] index Description for index
 		 *  \return Return description
 		 *  
 		 *  \details More details
@@ -34,11 +34,22 @@ namespace p4 {
 		/**
 		 *  \brief Brief description
 		 *  
+		 *  \param [in] rule Description for rule
+		 *  \param [out] index Description for index
 		 *  \return Return description
 		 *  
 		 *  \details More details
 		 */
-		uint32_t modifyRule(p4rule *rule, uint32_t &index);
+		uint32_t overwriteRule(p4rule_t *rule, uint32_t index);
+		
+		/**
+		 *  \brief Brief description
+		 *  
+		 *  \return Return description
+		 *  
+		 *  \details More details
+		 */
+		uint32_t modifyRule(uint32_t &index, const char *actionName, p4param_t *params);
 		
 		/**
 		 *  \brief Brief description
