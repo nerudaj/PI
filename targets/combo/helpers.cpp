@@ -23,12 +23,12 @@ char *dumpActionData(const pi_p4info_t *info, char *data, pi_p4_id_t actionId, c
 	while (param != NULL) {
 		size_t bitwidth = pi_p4info_action_param_bitwidth(info, actionId, paramIds[i]);
 		size_t bytewidth = (bitwidth + 7) / 8;
+
 		assert(bytewidth >= param->val_size);
 
 		size_t offset = bytewidth - param->val_size;
 		std::memset(data, 0, offset);
 		std::memcpy(data + offset, param->value, param->val_size);
-		std::memset(data + offset, 0, param->val_size);
 		data += bytewidth;
 		i++;
 		param = param->next;
@@ -67,7 +67,7 @@ std::unordered_map<std::string, ActionProperties> computeActionSizes(const pi_p4
 	for (size_t i = 0; i < actionCount; i++) {
 		result.emplace(
 			std::string(pi_p4info_action_name_from_id(info, actionIds[i])),
-			ActionProperties(pi_p4info_action_data_size(info, actionIds[i]), pi_p4_id_t(i))
+			ActionProperties(pi_p4info_action_data_size(info, actionIds[i]), actionIds[i])
 		);
 	}
 
