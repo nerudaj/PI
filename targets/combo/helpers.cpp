@@ -1,7 +1,7 @@
 #include "helpers.hpp"
 #include <iostream>
 
-p4engine_type_t translateEngine(pi_p4_id_t matchEngine) {
+p4engine_type_t translateEngine(pi_p4info_match_type_t matchEngine) {
 	switch (matchEngine) {
 	case PI_P4INFO_MATCH_TYPE_EXACT:
 		return P4ENGINE_CUCKOO;

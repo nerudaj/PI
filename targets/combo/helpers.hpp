@@ -8,7 +8,7 @@
 #include <PI/pi.h>
 #include <unordered_map>
 
-p4engine_type_t translateEngine(pi_p4_id_t matchEngine);
+p4engine_type_t translateEngine(pi_p4info_match_type_t matchEngine);
 
 char *dumpActionData(const pi_p4info_t *info, char *data, pi_p4_id_t actionId, const p4param_t *actionParams);
 

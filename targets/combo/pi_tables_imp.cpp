@@ -28,16 +28,14 @@
 #include "helpers.hpp"
 
 p4rule_t *createRule(const char *tableName, const pi_p4info_t *info, pi_p4_id_t table_id) {
-	// NOTE: Based on whether frontend or backend checks validity of incoming rules, this might get rewritten
+	std::size_t matchFieldsSize = pi_p4info_table_num_match_fields(info, table_id);
 
-	std::size_t matchFieldsSize;
-	auto matchFields = pi_p4info_table_get_match_fields(info, table_id, &matchFieldsSize);
-	
 	// Determine engine of rule
 	p4engine_type_t engineType = P4ENGINE_UNKNOWN;
 	for (std::size_t i = 0; i < matchFieldsSize; i++) {
-		if (engineType == P4ENGINE_UNKNOWN) engineType = translateEngine(matchFields[i]);
-		else if (engineType != translateEngine(matchFields[i])) return NULL;
+		auto finfo = pi_p4info_table_match_field_info(info, table_id, i);
+		if (engineType == P4ENGINE_UNKNOWN) engineType = translateEngine(finfo->match_type);
+		else if (engineType != translateEngine(finfo->match_type)) return NULL;
 	}
 	if (engineType == P4ENGINE_UNKNOWN) return NULL;
 
