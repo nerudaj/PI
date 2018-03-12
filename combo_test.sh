@@ -23,6 +23,7 @@ echo "Building testing backend"
 cd targets/combo/dummy2
 make clean
 if make; then
+	make install
 	cd ../../..
 else
 	cd ../../..
