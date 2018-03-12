@@ -2,8 +2,7 @@
 AM_CPPFLAGS = \
 -I$(top_srcdir)/include \
 -I$(top_srcdir)/lib \
--std=c++11 \
--DDEBUG_LOGS
+-std=c++11
 
 libpi_combo_la_SOURCES = \
 pi_imp.cpp \
