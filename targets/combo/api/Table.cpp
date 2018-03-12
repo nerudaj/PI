@@ -5,7 +5,9 @@
 
 using p4::Table;
 
+#ifndef UINT32_MAX
 #define UINT32_MAX 0xffffffff
+#endif
 
 bool Table::keysMatch(const p4key_elem_t* first, const p4key_elem_t* second) {
 	#ifdef DEBUG_LOGS
@@ -30,6 +32,7 @@ uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index, bool overwrite) {
 	
 	assert(rule != NULL);
 	assert(strcmp(rule->table_name, name.c_str()) == 0);
+	assert(rule->engine == type);
 
 	// Check table capacity
 	if (capacity == indices.size()) {
