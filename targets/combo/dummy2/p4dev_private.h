@@ -113,6 +113,6 @@ typedef struct {
 
 
 /*! \brief Name of the instance */
-const static char* compatibility_str = "netcope,p4";
+static const char* compatibility_str = "netcope,p4";
 
 #endif /* _P4PRIVATE_H_ */

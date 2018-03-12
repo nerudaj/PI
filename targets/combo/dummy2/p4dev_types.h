@@ -150,7 +150,7 @@ enum P4DEV_RETURN_CODES {
 /*! 
  * \brief String representation of possible return codes
  */
-const static char* P4DEV_STR_RETURN_CODES[] = {
+static const char* P4DEV_STR_RETURN_CODES[] = {
     [P4DEV_OK]                          = "P4DEV_OK",
     [P4DEV_UNABLE_TO_ATTACH]            = "P4DEV_UNABLE_TO_ATTACH",
     [P4DEV_UNKNOWN_ERR]                 = "P4DEV_UNKNOWN_ERR",
