@@ -6,20 +6,18 @@
 #include "RuleSet.hpp"
 
 namespace p4 {
-	class RuleSet;
-	
 	class Table {
 	protected:
 		std::string name; ///< Name of the table in P4 program
 		p4dev_t *deviceInfo; ///< Information about the device running P4 program
 		p4engine_type_t type; ///< Match engine used in the table
-		uint32_t capacity; ///< Maximum records a table can hold
-		std::vector<uint32_t> indices; ///< Indices of rules inside ruleset
-		uint32_t defaultRuleIndex; ///< Has value of capacity if there's no default rule
-		RuleSet *ruleset; ///< Pointer to class managing the rules
+		std::vector<p4rule_t*> rules; /// Rule storage
+		uint32_t size; ///< How many rules are stored here
 		
 		bool keysMatch(const p4key_elem_t* first, const p4key_elem_t* second);
-		bool hasDefaultRule() const { return defaultRuleIndex != 0xffffffff; }
+		bool hasDefaultRule() const { return rules[0] != NULL; }
+		uint32_t deleteRuleRaw(uint32_t index);
+		uint32_t writeRules();
 		
 	public:
 		/**
@@ -51,14 +49,12 @@ namespace p4 {
 		uint32_t insertDefaultRule(p4rule_t *rule);
 		
 		/**
-		 *  \brief Brief description
+		 *  \brief Change action of an existing rule
 		 *  
 		 *  \param [in] index Index of rule to modify
 		 *  \param [in] actionName Name of the new action
 		 *  \param [in] params Parameters of the new action
-		 *  \return Return description
-		 *  
-		 *  \details More details
+		 *  \return P4DEV_OK on success, P4DEV_* error code otherwise.
 		 */
 		uint32_t modifyRule(uint32_t index, const char *actionName, p4param_t *params);
 		
@@ -115,13 +111,18 @@ namespace p4 {
 		p4rule_t *getDefaultRule();
 
 		/**
-		 *  \brief Brief description
+		 *  \brief Returns current number of rules stored in the table
 		 *  
-		 *  \return Return description
-		 *  
-		 *  \details More details
+		 *  \details This number does not include default rule.
 		 */
-		uint32_t getTableSize() const { return indices.size(); }
+		uint32_t getTableSize() const { return size; }
+		
+		/**
+		 *  \brief Returns maximum number of rules that can be stored in the table
+		 *  
+		 *  \details This number does not include default rule.
+		 */
+		uint32_t getTableCapacity() const { return rules.size() - 1; }
 		
 		/**
 		 *  \brief Prepares instantion to be used
@@ -131,7 +132,7 @@ namespace p4 {
 		 *  \param [in] deviceInfoPtr Pointer to instance of device info
 		 *  \return API status (TODO list status)
 		 */
-		uint32_t initialize(const char *name, RuleSet *rulesetPtr, p4dev_t *deviceInfoPtr);
+		uint32_t initialize(const char *name, p4dev_t *deviceInfoPtr);
 		
 		/**
 		 *  \brief Sets the class instance to initial state
@@ -150,14 +151,8 @@ namespace p4 {
 		 */
 		uint32_t clear();
 		
-		/**
-		 *  \brief Clears the indices list and rebuilds it based on current 
-		 *  state of RuleSet
-		 */
-		void recomputeIndices();
-		
 		Table();
-		Table(const char *name, RuleSet *rulesetPtr, p4dev_t *deviceInfoPtr);
+		Table(const char *name, p4dev_t *deviceInfoPtr);
 		~Table();
 	};
     

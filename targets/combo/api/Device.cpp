@@ -13,7 +13,7 @@ TablePtr Device::getTable(const char *name) {
 		return NULL;
 	}
 	
-	return iterator->second;
+	return &(iterator->second);
 }
 
 uint32_t Device::initialize(const p4dev_name_t name) {
@@ -26,8 +26,6 @@ uint32_t Device::initialize(const p4dev_name_t name) {
 		return status;
 	}
 	
-	ruleset.initialize(&info);
-	
 	char **tableNames;
 	uint32_t nameCount;
 	if ((status = p4dev_get_table_names(&info, &tableNames, &nameCount)) != P4DEV_OK) {
@@ -35,17 +33,17 @@ uint32_t Device::initialize(const p4dev_name_t name) {
 		return status;
 	}
 	
+	try {
+		tables.reserve(nameCount);
+	}
+	catch(...) {
+		deinitialize();
+		return P4DEV_ALLOCATE_ERROR;
+	}
+	
 	for (uint32_t i = 0; i < nameCount; i++) {
 		std::string name(tableNames[i]);
-		tables[name] = new Table;
-		if (tables[name] == NULL) {
-			p4dev_free_table_names(&tableNames, &nameCount);
-			deinitialize();
-			return P4DEV_ALLOCATE_ERROR;
-		}
-		
-		tables[name]->initialize(name.c_str(), &ruleset, &info);
-		ruleset.addTablePointer(tables[name]);
+		tables[name].initialize(name.c_str(), &info);
 	}
 	
 	p4dev_free_table_names(&tableNames, &nameCount);
@@ -60,7 +58,6 @@ void Device::deinitialize() {
 	
 	if (info.dt != NULL) {
 		tables.clear();
-		ruleset.clear();
 		p4dev_free(&info);
 	}
 }
@@ -75,12 +72,30 @@ uint32_t Device::reset() {
 		return status;
 	}
 	
-	ruleset.clear();
-	for (auto iter = tables.begin(); iter != tables.end(); iter++) {
-		iter->second->recomputeIndices();
+	for (auto table : tables) {
+		table.second.clear();
 	}
+	/*for (auto iter = tables.begin(); iter != tables.end(); iter++) {
+		iter->second.clear();
+	}*/
 	
 	return status;
+}
+
+uint32_t Device::getTableList(std::vector<std::string> &names) {
+	try {
+		names.clear();
+		names.reserve(tables.size());
+	}
+	catch (...) {
+		return P4DEV_ALLOCATE_ERROR;
+	}
+	
+	for (auto iter = tables.begin(); iter != tables.end(); iter++) {
+		names.push_back(iter->first);
+	}
+	
+	return P4DEV_OK;
 }
 
 Device::Device() {

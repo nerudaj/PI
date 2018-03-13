@@ -17,8 +17,7 @@ namespace p4 {
 	class Device {
 	protected:
 		p4dev_t info; ///< Device info
-		std::unordered_map<std::string, TablePtr> tables; ///< Tables, indexed by their identifier in P4 program
-		RuleSet ruleset; ///< Object for storing rules
+		std::unordered_map<std::string, Table> tables; ///< Tables, indexed by their identifier in P4 program
 	
 	public:
 		/**
@@ -69,6 +68,8 @@ namespace p4 {
 		 *  NULL is returned.
 		 */
 		TablePtr getTable(const char *name);
+		
+		uint32_t getTableList(std::vector<std::string> &names);
 		
 		Device();
 		~Device();
