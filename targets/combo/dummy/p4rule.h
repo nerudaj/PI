@@ -47,7 +47,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "p4dev_types.h"
-#include <assert.h>
 
 #ifndef _P4RULE_H_
 #define _P4RULE_H_
@@ -90,7 +89,7 @@ typedef union value_option {
  *  - next - next \ref p4key_elem_t part
  */
 typedef struct p4key_elem {
-    char*         name;           /*!< Name of the key part */
+    const char*         name;           /*!< Name of the key part */
     uint8_t*            value;          /*!< Binary representation with value of the key */
     value_option_t      opt;            /*!< Optional parameters which are required with a value (mask, prefix length, etc.) */
     uint32_t            val_size;       /*!< Size of the value array in bytes */
@@ -107,7 +106,7 @@ typedef struct p4key_elem {
  *  - next - next \ref p4param_t part
  */
 typedef struct p4param {
-    char*         param_name; /*!< Name of the parameter */
+    const char*         param_name; /*!< Name of the parameter */
     uint8_t*            value;      /*!< Binary representation of value */
     uint32_t            val_size;   /*!< Size of the value array in bytes */
     struct p4param*     next;       /*!< Next available parameter */
@@ -130,10 +129,10 @@ typedef struct p4param {
  *  required element is not find.
  */
 typedef struct p4rule {
-    char*         table_name;       /*!< Name of the target table (C String) */
+    const char*         table_name;       /*!< Name of the target table (C String) */
     p4engine_type_t     engine;           /*!< Type of  used engine. This parameter  typically infers the type of constructed \p key */
     p4key_elem_t*       key;              /*!< Key to insert - linked list of \ref p4key_elem_t structures */
-    char*         action;           /*!< Name of the action (C String) */
+    const char*         action;           /*!< Name of the action (C String) */
     p4param_t*          param;            /*!< Parameters of selected action */
     bool                def;              /*!< The rule is marked as default */
     void*               private_param;    /*!< Pointer on private pamarameter. The private parameter holds the 
@@ -141,6 +140,7 @@ typedef struct p4rule {
                                                is freed in the  \ref p4rule_free function. Notice that this pointer is considered
                                                to be set by the code of given search engine. */
 } p4rule_t;
+
 
 /*!
  * \brief Create a general P4 rule structure.

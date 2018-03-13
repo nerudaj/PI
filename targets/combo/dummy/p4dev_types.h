@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <combo.h>
 
 #ifndef _P4DEV_TYPES_H_
 #define _P4DEV_TYPES_H_
@@ -79,9 +80,9 @@
  * Each program is required to call the \ref p4dev_init function.
  */
 typedef struct p4dev {
-    //cs_device_t* cs;          /*!< Combo device */
-    //cs_space_t*  cs_space;    /*!< Combo space mapping */
-    void*  dt;          /*!< Device tree blob (describes the opened P4 device) */
+    cs_device_t* cs;          /*!< Combo device */
+    cs_space_t*  cs_space;    /*!< Combo space mapping */
+    const void*  dt;          /*!< Device tree blob (describes the opened P4 device) */
     uint32_t     dt_p4offset; /*!< Offset of a P4 node in the device tree */
 } p4dev_t;
 
@@ -149,7 +150,7 @@ enum P4DEV_RETURN_CODES {
 /*! 
  * \brief String representation of possible return codes
  */
-const static char* P4DEV_STR_RETURN_CODES[] = {
+static const char* P4DEV_STR_RETURN_CODES[] = {
     [P4DEV_OK]                          = "P4DEV_OK",
     [P4DEV_UNABLE_TO_ATTACH]            = "P4DEV_UNABLE_TO_ATTACH",
     [P4DEV_UNKNOWN_ERR]                 = "P4DEV_UNKNOWN_ERR",

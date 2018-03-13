@@ -88,9 +88,9 @@ extern "C" {
  */
 
 /*! \brief Identificator of the first card in the system */
-const static p4dev_name_t P4DEV_ID0 = "/dev/combo1";
+static const p4dev_name_t P4DEV_ID0 = CS_PATH_DEV(0);
 /*! \brief Identificator of the second card in the system */
-const static p4dev_name_t P4DEV_ID1 = "/dev/combo2";
+static const p4dev_name_t P4DEV_ID1 = CS_PATH_DEV(1);
 
 /*!
  * \brief Initialize the P4 device - directly with a given device tree structure.
