@@ -34,7 +34,6 @@ pi_status_t _pi_init(void *extra) {
 }
 
 pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_assign_extra_t *extra) {
-	(void)p4info;
 	(void)extra;
 	std::cout << "PI_assign_device - " << dev_id << "\n";
 	
@@ -58,17 +57,24 @@ pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_
 }
 
 pi_status_t _pi_update_device_start(pi_dev_id_t dev_id, const pi_p4info_t *p4info, const char *device_data, size_t device_data_size) {
-	(void)dev_id;
-	(void)p4info;
 	(void)device_data;
 	(void)device_data_size;
 	std::cout << "PI_update_device_start\n";
+
+	if (dev_id > DeviceManager::getDeviceCount()) {
+		return PI_STATUS_DEV_OUT_OF_RANGE;
+	}
+
+	std::cout << "\tIgnoring new device datay\n";
+
+	infos[dev_id] = p4info;
+
 	return PI_STATUS_SUCCESS;
 }
 
 pi_status_t _pi_update_device_end(pi_dev_id_t dev_id) {
 	(void)dev_id;
-	std::cout << "PI_update_device_start\n";
+	std::cout << "PI_update_device_end\n";
 	return PI_STATUS_SUCCESS;
 }
 
