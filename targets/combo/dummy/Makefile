@@ -33,8 +33,12 @@ tcam.o: engines/tcam.c engines/tcam.h
 libp4dev-d.so: p4dev.o p4dev_tree.o p4rule.o bst_lpm.o bstlpm.o vector.o cuckoo.o standard.o tcam.o
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
-install: libp4dev-d.so
+install-local: libp4dev-d.so
 	cp $^ ../../../CLI/
+
+install: libp4dev-d.so
+	cp $^ /usr/local/lib
+	ldconfig
 
 clean:
 	rm -f *.o *.so

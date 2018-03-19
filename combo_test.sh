@@ -23,11 +23,12 @@ echo "Building testing backend"
 cd targets/combo/dummy
 make clean
 if make; then
-	make install
+	make install-local
 	cd ../../..
 else
 	cd ../../..
 	echo -e $COLOR_LIGHT_RED "[BUILD FAILED] - Dummy API" $COLOR_NC
+	exit 1
 fi
 
 clear
@@ -38,6 +39,7 @@ if make -j 24; then
 	cd CLI
 else
 	echo -e $COLOR_LIGHT_RED "[BUILD FAILED] - App" $COLOR_NC
+	exit 1
 fi
 
 clear
