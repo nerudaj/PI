@@ -41,6 +41,18 @@ $(top_builddir)/../targets/bmv2/libpi_bmv2.la \
 -lthrift -lruntimestubs -lsimpleswitch_thrift
 endif  # WITH_BMV2
 
+# if WITH_COMBO
+bin_PROGRAMS = pi_grpc_server
+
+pi_grpc_server_SOURCES = pi_server_main.cpp
+
+pi_grpc_server_LDADD = \
+$(COMMON_SERVER_LIBS) \
+-L../../targets/combo/dummy -lp4dev-d \
+$(top_builddir)/../targets/combo/libpi_combo.la \
+-lthrift -lruntimestubs -lsimpleswitch_thrift
+# endif
+
 pi_server_dummy_LDADD = \
 $(COMMON_SERVER_LIBS) \
 $(top_builddir)/../targets/dummy/libpi_dummy.la

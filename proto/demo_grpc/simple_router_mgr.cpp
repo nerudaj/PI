@@ -177,6 +177,27 @@ struct ConfigUpdateHandler : public MgrHandler {
   std::promise<int> &promise;
 };
 
+/*class TableAddHandler : public MgrHandler {
+	TableAddHandler(SimpleRouterMgr *mgr, uint32_t prefix, uint32_t prefixLen, uint32_t nextHop, uint32_t port, std::promise<int> &promise) MgrHandler(mgr) {
+		TableAddHandler::prefix = prefix;
+		TableAddHandler::prefixLen = prefixLen;
+		TableAddHandler::nextHop = nextHop;
+		TableAddHandler::port = port;
+		TableAddHandler::promise = promise;
+	}
+	
+	void operator()() {
+		int rc = simple_router_mgr->add_route_(prefix, prefixLen, nextHop, port);
+		promise.set_value(rc);
+	}
+	
+	uint32_t prefix;
+	uint32_t prefixLen;
+	uint32_t nextHop;
+	uint32_t port;
+	std::promise<int> &promise;
+};*/
+
 class StreamChannelSyncClient {
  public:
   StreamChannelSyncClient(SimpleRouterMgr *simple_router_mgr,
@@ -289,80 +310,150 @@ std::string uint_to_string<uint16_t>(uint16_t i) {
 template <>
 std::string uint_to_string<uint32_t>(uint32_t i) {
   i = ntohl(i);
-  return std::string(reinterpret_cast<char *>(&i), sizeof(i));
+  std::string r = std::string(reinterpret_cast<char *>(&i), sizeof(i));
+  std::cerr << i << " <-> " << r << "\n";
+  return r;
 };
 
 }  // namespace
 
-int
-SimpleRouterMgr::add_one_entry(p4::TableEntry *match_action_entry) {
-  p4::WriteRequest request;
-  request.set_device_id(dev_id);
-  auto update = request.add_updates();
-  update->set_type(p4::Update_Type_INSERT);
-  auto entity = update->mutable_entity();
-  entity->set_allocated_table_entry(match_action_entry);
+int SimpleRouterMgr::add_one_entry(p4::TableEntry *match_action_entry) {
+	p4::WriteRequest request;
+	request.set_device_id(dev_id);
+	
+	auto update = request.add_updates();
+	update->set_type(p4::Update_Type_INSERT);
+	
+	auto entity = update->mutable_entity();
+	entity->set_allocated_table_entry(match_action_entry);
 
-  p4::WriteResponse rep;
-  ClientContext context;
-  Status status = pi_stub_->Write(&context, request, &rep);
+	p4::WriteResponse rep;
+	ClientContext context;
+	Status status = pi_stub_->Write(&context, request, &rep);
 
-  entity->release_table_entry();
+	entity->release_table_entry();
+	
+	if (!status.ok()) {
+		std::cerr << "ERROR in P4Stub: " << status.error_message() << "\n";
+		return status.error_code();
+	}
 
-  return 0;
+	return 0;
 }
 
-int
-SimpleRouterMgr::add_route_(uint32_t prefix, int pLen, uint32_t nhop,
-                            uint16_t port, UpdateMode update_mode) {
-  int rc = 0;
-  if (update_mode == UpdateMode::DEVICE_STATE) {
-    pi_p4_id_t t_id = pi_p4info_table_id_from_name(p4info, "ipv4_lpm");
-    pi_p4_id_t a_id = pi_p4info_action_id_from_name(p4info, "set_nhop");
+int SimpleRouterMgr::del_one_entry(p4::TableEntry *match_action_entry) {
+	p4::WriteRequest request;
+	request.set_device_id(dev_id);
+	
+	auto update = request.add_updates();
+	update->set_type(p4::Update_Type_DELETE);
+	
+	auto entity = update->mutable_entity();
+	entity->set_allocated_table_entry(match_action_entry);
+	
+	p4::WriteResponse rep;
+	ClientContext context;
+	Status status = pi_stub_->Write(&context, request, &rep);
+	
+	entity->release_table_entry();
+	
+	if (!status.ok()) {
+		std::cerr << "ERROR in P4Stub: " << status.error_message() << "\n";
+		return status.error_code();
+	}
 
-    p4::TableEntry match_action_entry;
-    match_action_entry.set_table_id(t_id);
-
-    auto mf = match_action_entry.add_match();
-    mf->set_field_id(pi_p4info_table_match_field_id_from_name(
-        p4info, t_id, "ipv4.dstAddr"));
-    auto mf_lpm = mf->mutable_lpm();
-    mf_lpm->set_value(uint_to_string(nhop));
-    mf_lpm->set_prefix_len(pLen);
-
-    auto entry = match_action_entry.mutable_action();
-    auto action = entry->mutable_action();
-    action->set_action_id(a_id);
-    {
-      auto param = action->add_params();
-      param->set_param_id(
-          pi_p4info_action_param_id_from_name(p4info, a_id, "nhop_ipv4"));
-      param->set_value(uint_to_string(nhop));
-    }
-    {
-      auto param = action->add_params();
-      param->set_param_id(
-          pi_p4info_action_param_id_from_name(p4info, a_id, "port"));
-      param->set_value(uint_to_string(port));
-    }
-
-    rc = add_one_entry(&match_action_entry);
-  }
-
-  if (update_mode == UpdateMode::CONTROLLER_STATE) {
-    next_hops[nhop] = port;
-  }
-
-  return rc;
+	return 0;
 }
 
-int
-SimpleRouterMgr::add_route(uint32_t prefix, int pLen, uint32_t nhop,
-                           uint16_t port) {
-  int rc = 0;
-  rc |= add_route_(prefix, pLen, nhop, port, UpdateMode::CONTROLLER_STATE);
-  rc |= add_route_(prefix, pLen, nhop, port, UpdateMode::DEVICE_STATE);
-  return rc;
+int SimpleRouterMgr::add_route_(uint32_t prefix, int pLen, uint32_t nhop, uint16_t port, UpdateMode update_mode) {
+	int rc = 0;
+	if (update_mode == UpdateMode::DEVICE_STATE) {
+		pi_p4_id_t t_id = pi_p4info_table_id_from_name(p4info, "ipv4_lpm");
+		pi_p4_id_t a_id = pi_p4info_action_id_from_name(p4info, "set_nhop");
+
+		p4::TableEntry match_action_entry;
+		match_action_entry.set_table_id(t_id);
+
+		auto mf = match_action_entry.add_match();
+		mf->set_field_id(pi_p4info_table_match_field_id_from_name(p4info, t_id, "ipv4.dstAddr"));
+		
+		auto mf_lpm = mf->mutable_lpm();
+		mf_lpm->set_value(uint_to_string(prefix));
+		mf_lpm->set_prefix_len(pLen);
+
+		auto entry = match_action_entry.mutable_action();
+		auto action = entry->mutable_action();
+		action->set_action_id(a_id);
+		{
+			auto param = action->add_params();
+			param->set_param_id(
+			pi_p4info_action_param_id_from_name(p4info, a_id, "nhop_ipv4"));
+			param->set_value(uint_to_string(nhop));
+		}
+		
+		{
+			auto param = action->add_params();
+			param->set_param_id(
+			pi_p4info_action_param_id_from_name(p4info, a_id, "port"));
+			param->set_value(uint_to_string(port));
+		}
+
+		rc = add_one_entry(&match_action_entry);
+	}
+
+	if (update_mode == UpdateMode::CONTROLLER_STATE) {
+		next_hops[nhop] = port;
+		lpm_rules[prefix] = pLen;
+		next_hops_m[prefix] = std::make_pair(nhop, port);
+	}
+
+	return rc;
+}
+
+int SimpleRouterMgr::add_route(uint32_t prefix, int pLen, uint32_t nhop, uint16_t port) {
+	int rc = add_route_(prefix, pLen, nhop, port, UpdateMode::DEVICE_STATE);
+	if (rc == 0) {
+		rc = add_route_(prefix, pLen, nhop, port, UpdateMode::CONTROLLER_STATE);
+	}
+	return rc;
+}
+
+int SimpleRouterMgr::del_route_(uint32_t prefix, int pLen, UpdateMode update_mode) {
+	int rc = 0;
+	
+	if (update_mode == UpdateMode::DEVICE_STATE) {
+		pi_p4_id_t t_id = pi_p4info_table_id_from_name(p4info, "ipv4_lpm");
+		
+		p4::TableEntry match_action_entry;
+		match_action_entry.set_table_id(t_id);
+		
+		auto mf = match_action_entry.add_match();
+		mf->set_field_id(pi_p4info_table_match_field_id_from_name(p4info, t_id, "ipv4.dstAddr"));
+		
+		auto mf_lpm = mf->mutable_lpm();
+		mf_lpm->set_value(uint_to_string(prefix));
+		mf_lpm->set_prefix_len(pLen);
+		
+		rc = del_one_entry(&match_action_entry);
+		
+		rc = 0;
+	}
+	else if (update_mode == UpdateMode::CONTROLLER_STATE) {
+		if (lpm_rules.find(prefix) != lpm_rules.end()) {
+			lpm_rules.erase(prefix);
+			next_hops_m.erase(prefix);
+		}
+	}
+	
+	return rc;
+}
+
+int SimpleRouterMgr::del_route(uint32_t prefix, int pLen) {
+	int rc = del_route_(prefix, pLen, UpdateMode::DEVICE_STATE);
+	if (rc == 0) {
+		rc = del_route_(prefix, pLen, UpdateMode::CONTROLLER_STATE);
+	}
+	return rc;
 }
 
 int
@@ -464,8 +555,8 @@ SimpleRouterMgr::set_default_entries() {
 
 int
 SimpleRouterMgr::static_config_(UpdateMode update_mode) {
-  add_route_(0x0a00000a, 32, 0x0a00000a, 1, update_mode);
-  add_route_(0x0a00010a, 32, 0x0a00010a, 2, update_mode);
+  //add_route_(0x0a00000a, 32, 0x0a00000a, 1, update_mode);
+  //add_route_(1167554258, 32, 0x0a00010a, 2, update_mode);
   {
     unsigned char hw1[6] = {0x00, 0xaa, 0xbb, 0x00, 0x00, 0x00};
     unsigned char hw2[6] = {0x00, 0xaa, 0xbb, 0x00, 0x00, 0x01};

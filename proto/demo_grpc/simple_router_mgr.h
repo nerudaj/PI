@@ -35,6 +35,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <thread>
+#include <utility>
 
 using grpc::Channel;
 
@@ -68,101 +69,92 @@ struct __attribute__((packed)) ipv4_header_t {
 };
 
 class StreamChannelSyncClient;
+typedef std::unordered_map<uint32_t, int> LpmRuleMap;
+typedef std::unordered_map<uint32_t, std::pair<uint32_t, uint16_t>> NextHopMap;
 
 class SimpleRouterMgr {
- public:
-  friend struct PacketHandler;
-  friend struct CounterQueryHandler;
-  friend struct ConfigUpdateHandler;
+public:
+	friend struct PacketHandler;
+	friend struct CounterQueryHandler;
+	friend struct ConfigUpdateHandler;
 
-  typedef std::vector<char> Packet;
+	typedef std::vector<char> Packet;
 
-  SimpleRouterMgr(int dev_id,
-                  boost::asio::io_service &io_service,
-                  std::shared_ptr<Channel> channel);
+	SimpleRouterMgr(int dev_id, boost::asio::io_service &io_service, std::shared_ptr<Channel> channel);
+	~SimpleRouterMgr();
 
-  ~SimpleRouterMgr();
+	int assign(const std::string &config_buffer, const std::string *p4info_buffer);
+	int add_route(uint32_t prefix, int pLen, uint32_t nhop, uint16_t port);
+	int del_route(uint32_t prefix, int pLen);
+	int set_default_entries();
+	int static_config();
+	void add_iface(uint16_t port_num, uint32_t ip_addr, const unsigned char (&mac_addr)[6]);
+	int query_counter(const std::string &counter_name, size_t index, uint64_t *packets, uint64_t *bytes);
+	int update_config(const std::string &config_buffer, const std::string *p4info_buffer);
 
-  int assign(const std::string &config_buffer,
-             const std::string *p4info_buffer);
+	const LpmRuleMap &get_lpm_rule_map() const { return lpm_rules; }
+	const NextHopMap &get_next_hop_map() const { return next_hops_m; }
+	
+	template <typename E> void post_event(E &&event) {
+		io_service.post(std::move(event));
+	}
 
-  int add_route(uint32_t prefix, int pLen, uint32_t nhop, uint16_t port);
+private:
+	struct Iface {
+		uint16_t port_num;
+		uint32_t ip_addr;
+		unsigned char mac_addr[6];
 
-  int set_default_entries();
-  int static_config();
+		static Iface make(uint16_t port_num, uint32_t ip_addr, const unsigned char (&mac_addr)[6]) {
+			Iface iface;
+			iface.port_num = port_num;
+			iface.ip_addr = ip_addr;
+			memcpy(iface.mac_addr, mac_addr, sizeof(mac_addr));
+			return iface;
+		}
+	};
 
-  void add_iface(uint16_t port_num, uint32_t ip_addr,
-                 const unsigned char (&mac_addr)[6]);
+	enum class UpdateMode {
+		CONTROLLER_STATE,
+		DEVICE_STATE
+	};
+	
+	typedef std::vector<Packet> PacketQueue;
 
-  int query_counter(const std::string &counter_name, size_t index,
-                    uint64_t *packets, uint64_t *bytes);
+	void handle_arp(const arp_header_t &arp_header);
+	void handle_ip(Packet &&pkt_copy, uint32_t dst_addr);
 
-  int update_config(const std::string &config_buffer,
-                    const std::string *p4info_buffer);
+	int assign_mac_addr(uint16_t port, const unsigned char (&mac_addr)[6]);
+	int add_arp_entry(uint32_t addr, const unsigned char (&mac_addr)[6]);
+	void handle_arp_request(const arp_header_t &arp_header);
+	void handle_arp_reply(const arp_header_t &arp_header);
+	void send_arp_request(uint16_t port, uint32_t dst_addr);
 
-  template <typename E> void post_event(E &&event) {
-    io_service.post(std::move(event));
-  }
+	int add_one_entry(p4::TableEntry *match_action_entry);
+	int del_one_entry(p4::TableEntry *match_action_entry);
 
- private:
-  struct Iface {
-    uint16_t port_num;
-    uint32_t ip_addr;
-    unsigned char mac_addr[6];
+	int set_one_default_entry(pi_p4_id_t t_id, p4::Action *action);
 
-    static Iface make(uint16_t port_num, uint32_t ip_addr,
-                      const unsigned char (&mac_addr)[6]) {
-      Iface iface;
-      iface.port_num = port_num;
-      iface.ip_addr = ip_addr;
-      memcpy(iface.mac_addr, mac_addr, sizeof(mac_addr));
-      return iface;
-    }
-  };
+	int add_route_(uint32_t prefix, int pLen, uint32_t nhop, uint16_t port, UpdateMode update_mode);
+	void add_iface_(uint16_t port_num, uint32_t ip_addr, const unsigned char (&mac_addr)[6], UpdateMode update_mode);
+	int del_route_(uint32_t prefix, int pLen, UpdateMode update_mode);
 
-  enum class UpdateMode {
-    CONTROLLER_STATE,
-    DEVICE_STATE
-  };
+	int static_config_(UpdateMode update_mode);
+	int query_counter_(const std::string &counter_name, size_t index, p4::CounterData *counter_data);
+	int update_config_(const std::string &config_buffer, const std::string *p4info_buffer);
+	void send_packetout(const char *data, size_t size);
 
-  typedef std::vector<Packet> PacketQueue;
-
-  void handle_arp(const arp_header_t &arp_header);
-  void handle_ip(Packet &&pkt_copy, uint32_t dst_addr);
-
-  int assign_mac_addr(uint16_t port, const unsigned char (&mac_addr)[6]);
-  int add_arp_entry(uint32_t addr, const unsigned char (&mac_addr)[6]);
-  void handle_arp_request(const arp_header_t &arp_header);
-  void handle_arp_reply(const arp_header_t &arp_header);
-  void send_arp_request(uint16_t port, uint32_t dst_addr);
-
-  int add_one_entry(p4::TableEntry *match_action_entry);
-
-  int set_one_default_entry(pi_p4_id_t t_id, p4::Action *action);
-
-  int add_route_(uint32_t prefix, int pLen, uint32_t nhop, uint16_t port,
-                 UpdateMode udpate_mode);
-
-  void add_iface_(uint16_t port_num, uint32_t ip_addr,
-                  const unsigned char (&mac_addr)[6], UpdateMode update_mode);
-
-  int static_config_(UpdateMode update_mode);
-
-  int query_counter_(const std::string &counter_name, size_t index,
-                     p4::CounterData *counter_data);
-
-  int update_config_(const std::string &config_buffer,
-                     const std::string *p4info_buffer);
-
-  void send_packetout(const char *data, size_t size);
-
-  bool assigned{false};
-  std::vector<Iface> ifaces;
-  std::unordered_map<uint32_t, uint16_t> next_hops;
-  std::unordered_map<uint32_t, PacketQueue> packet_queues;
-  int dev_id;
-  pi_p4info_t *p4info{nullptr};
-  boost::asio::io_service &io_service;
-  std::unique_ptr<p4::P4Runtime::Stub> pi_stub_;
-  std::unique_ptr<StreamChannelSyncClient> packet_io_client;
+	bool assigned{false};
+	std::vector<Iface> ifaces;
+	std::unordered_map<uint32_t, uint16_t> next_hops;
+	std::unordered_map<uint32_t, PacketQueue> packet_queues;
+	
+	LpmRuleMap lpm_rules;
+	NextHopMap next_hops_m;
+	
+	int dev_id;
+	pi_p4info_t *p4info{nullptr};
+	boost::asio::io_service &io_service;
+	std::unique_ptr<p4::P4Runtime::Stub> pi_stub_;
+	std::unique_ptr<StreamChannelSyncClient> packet_io_client;
 };
