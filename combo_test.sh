@@ -20,23 +20,26 @@ COLOR_LIGHT_GRAY='\e[0;37m'
 
 echo "Building testing backend"
 
-cd targets/combo/dummy2
+cd targets/combo/dummy
 make clean
 if make; then
-	make install
+	make install-local
 	cd ../../..
 else
 	cd ../../..
-	echo "Build failed"
+	echo -e $COLOR_LIGHT_RED "[BUILD FAILED] - Dummy API" $COLOR_NC
+	exit 1
 fi
 
 clear
 
 echo "Building application"
+make clean
 if make -j 24; then
 	cd CLI
 else
-	"Build failed"
+	echo -e $COLOR_LIGHT_RED "[BUILD FAILED] - App" $COLOR_NC
+	exit 1
 fi
 
 clear
@@ -48,7 +51,7 @@ do
 	rm -f log.txt
 	echo "Test" $i "-" ${labels[$i-1]}
 	
-	if ./pi_CLI_combo -c ../tests/testdata/combo_card.json >$i.out 2>&1 <../tests/combo/in/$i.txt; then
+	if ./pi_CLI_combo -c ../tests/combo/info.json >$i.out 2>&1 <../tests/combo/in/$i.txt; then
 		if diff -N log.txt ../tests/combo/out/$i.txt >$i.diff 2>&1; then
 			echo -e $COLOR_LIGHT_GREEN "[OK]" $COLOR_NC
 			rm -f $i.diff $i.out log.txt

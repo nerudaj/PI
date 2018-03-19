@@ -418,7 +418,7 @@
                     "id": 0,
                     "match_type": "lpm",
                     "type": "simple",
-                    "max_size": 2,
+                    "max_size": 3,
                     "with_counters": false,
                     "direct_meters": null,
                     "support_timeout": false,
