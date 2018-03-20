@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include <unordered_map>
-#include "RuleSet.hpp"
 #include "Table.hpp"
 
 namespace p4 {

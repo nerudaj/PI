@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <string>
-#include "RuleSet.hpp"
 
 namespace p4 {
 	class Table {
