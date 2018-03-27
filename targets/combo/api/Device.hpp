@@ -7,7 +7,7 @@
 
 namespace p4 {
 	/**
-	 *  \brief Class representing abstraction of P4 device
+	 *  \brief Class representing abstraction over P4 device
 	 *  
 	 *  \details Instance of this class *must* be initialized by the proper method
 	 *  prior to any other operation. Initialization will also allocate memory for
@@ -33,7 +33,8 @@ namespace p4 {
 		 *      - P4DEV_DEVICE_TREE_READING_ERROR - reading of the device tree has failed.
 		 *      - P4DEV_NO_CALLBACK - appropriate search engine functions are not implemented.
 		 *  
-		 *  \note This method *must* be called prior to anything else		 
+		 *  \note This method *must* be called prior to anything else. If does not succeeed,
+		 *  card is probably not available or properly configured and cannot be used.		 
 		 */
 		uint32_t initialize(const p4dev_name_t name);
 		
@@ -68,6 +69,16 @@ namespace p4 {
 		 */
 		TablePtr getTable(const char *name);
 		
+		/**
+		 *  \brief Get array of names of tables available in device
+		 *  
+		 *  \param [out] names Vector array to store names to
+		 *  \return API status code:
+		 *      - P4DEV_OK - everything went ok
+		 *      - P4DEV_ALLOCATE_ERROR - Memory for names could not be allocated
+		 *  
+		 *  \details If P4DEV_ALLOCATE_ERROR was returned, names will be empty.
+		 */
 		uint32_t getTableList(std::vector<std::string> &names);
 		
 		Device();
