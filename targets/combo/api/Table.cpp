@@ -63,9 +63,16 @@ uint32_t Table::writeRules() {
 		rulesRealSize--;
 	}
 	
-	status = p4dev_insert_rules(deviceInfo, (const p4rule_t**)(data), rulesRealSize);
+	status = p4dev_initialize_table(deviceInfo, name.c_str());
 	if (status != P4DEV_OK) {
 		return status;
+	}
+	
+	if (rulesRealSize != 0) {
+		status = p4dev_insert_rules(deviceInfo, (const p4rule_t**)(data), rulesRealSize);
+		if (status != P4DEV_OK) {
+			return status;
+		}
 	}
 	
 	return p4dev_enable(deviceInfo);
