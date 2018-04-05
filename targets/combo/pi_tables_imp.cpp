@@ -196,12 +196,8 @@ uint32_t addAction(const pi_p4info_t *info, const pi_action_data_t *action_data,
 
 	p4param_t *param = NULL;
 	if ((status = createParams(info, actionID, actionData, &param)) != P4DEV_OK) return status;
-
-	if (param != NULL) {
-		if ((status = p4rule_add_param(rule, param)) != P4DEV_OK) {
-			return status;
-		}
-	}
+	
+	rule->param = param;
 
 	return P4DEV_OK;
 }

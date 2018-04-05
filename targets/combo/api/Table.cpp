@@ -135,7 +135,6 @@ uint32_t Table::modifyRule(uint32_t index, const char *actionName, p4param_t *pa
 	#endif
 	
 	assert(actionName != NULL);
-	assert(params != NULL);
 
 	if (index >= getTableSize()) {
 		return P4DEV_ERROR;
@@ -152,10 +151,7 @@ uint32_t Table::modifyRule(uint32_t index, const char *actionName, p4param_t *pa
 	}
 	
 	p4param_free(rule->param);
-	rule->param = NULL;
-	if ((status = p4rule_add_param(rule, params)) != P4DEV_OK) {
-		return status;
-	}
+	rule->param = params;
 	
 	return writeRules();
 }
