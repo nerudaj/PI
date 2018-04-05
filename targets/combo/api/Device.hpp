@@ -36,7 +36,7 @@ namespace p4 {
 		 *  \note This method *must* be called prior to anything else. If does not succeeed,
 		 *  card is probably not available or properly configured and cannot be used.		 
 		 */
-		uint32_t initialize(const p4dev_name_t name);
+		uint32_t initialize(char *name);
 		
 		/**
 		 *  \brief Closes connection to device

@@ -16,7 +16,7 @@ TablePtr Device::getTable(const char *name) {
 	return &(iterator->second);
 }
 
-uint32_t Device::initialize(const p4dev_name_t name) {
+uint32_t Device::initialize(char *name) {
 	#ifdef DEBUG_LOGS
 	std::cout << "Device::initialize(...)\n";
 	#endif
