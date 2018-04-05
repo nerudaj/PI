@@ -58,6 +58,18 @@
 #include "engines/cuckoo.h"
 #include "engines/bstlpm.h"
 
+uint32_t p4dev_get_device_path(char* dst, const uint32_t len, const uint32_t id) {
+	(void)id;
+	
+	for (uint32_t i = 0; i < len - 1; i++) {
+		dst[i] = '0';
+	}
+	
+	dst[len - 1] = '\0';
+	
+	return P4DEV_OK;
+}
+
 /*!
  * \brief Helping structure with mapping between the human readable representation
  * of the search engine type and library based P4ENGINE_* enum type.
