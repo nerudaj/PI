@@ -44,8 +44,20 @@ pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_
 		return PI_STATUS_DEV_ALREADY_ASSIGNED;
 	}
 	
-	p4dev_name_t DEVICE_NAMES[] = { P4DEV_ID0, P4DEV_ID1 };
-	uint32_t status = devices[dev_id].initialize(DEVICE_NAMES[dev_id]);
+	uint32_t deviceNameLength = 128;
+	char *deviceName = new char[deviceNameLength];
+	if (deviceName == NULL) {
+		p4dev_err_stderr(P4DEV_ALLOCATE_ERROR);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + P4DEV_ALLOCATE_ERROR);
+	}
+	
+	uint32_t status = p4dev_get_device_path(deviceName, deviceNameLength, dev_id);
+	if (status != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+	
+	status = devices[dev_id].initialize(deviceName);
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
