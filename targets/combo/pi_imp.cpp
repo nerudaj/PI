@@ -24,18 +24,19 @@
 
 #include "api/P4Dev.hpp"
 #include "devices.hpp"
+#include "logger.hpp"
 
 extern "C" {
 
 pi_status_t _pi_init(void *extra) {
 	(void) extra;
-	std::cout << "PI_init\n";
+	Logger::debug("PI_init");
 	return PI_STATUS_SUCCESS;
 }
 
 pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_assign_extra_t *extra) {
 	(void)extra;
-	std::cout << "PI_assign_device - " << dev_id << "\n";
+	Logger::debug("PI_assign_device - " + std::to_string(dev_id));
 	
 	if (dev_id > DeviceManager::getDeviceCount()) {
 		return PI_STATUS_DEV_OUT_OF_RANGE;
@@ -71,7 +72,7 @@ pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_
 pi_status_t _pi_update_device_start(pi_dev_id_t dev_id, const pi_p4info_t *p4info, const char *device_data, size_t device_data_size) {
 	(void)device_data;
 	(void)device_data_size;
-	std::cout << "PI_update_device_start\n";
+	Logger::debug("PI_update_device_start");
 
 	if (dev_id > DeviceManager::getDeviceCount()) {
 		return PI_STATUS_DEV_OUT_OF_RANGE;
@@ -86,12 +87,12 @@ pi_status_t _pi_update_device_start(pi_dev_id_t dev_id, const pi_p4info_t *p4inf
 
 pi_status_t _pi_update_device_end(pi_dev_id_t dev_id) {
 	(void)dev_id;
-	std::cout << "PI_update_device_end\n";
+	Logger::debug("PI_update_device_end");
 	return PI_STATUS_SUCCESS;
 }
 
 pi_status_t _pi_remove_device(pi_dev_id_t dev_id) {
-	std::cout << "PI_remove_device\n";
+	Logger::debug("PI_remove_device");
 	
 	if (dev_id > DeviceManager::getDeviceCount()) {
 		return PI_STATUS_DEV_OUT_OF_RANGE;
@@ -104,33 +105,33 @@ pi_status_t _pi_remove_device(pi_dev_id_t dev_id) {
 }
 
 pi_status_t _pi_destroy() {
-	std::cout << "PI_destroy\n";
+	Logger::debug("PI_destroy");
 	return PI_STATUS_SUCCESS;
 }
 
 // Combo does not support transaction and has no use for the session_handle
 pi_status_t _pi_session_init(pi_session_handle_t *session_handle) {
 	(void)session_handle;
-	std::cout << "PI_session_init\n";
+	Logger::debug("PI_session_init");
 	return PI_STATUS_SUCCESS;
 }
 
 pi_status_t _pi_session_cleanup(pi_session_handle_t session_handle) {
 	(void) session_handle;
-	std::cout << "PI_session_cleanup\n";
+	Logger::debug("PI_session_cleanup");
 	return PI_STATUS_SUCCESS;
 }
 
 pi_status_t _pi_batch_begin(pi_session_handle_t session_handle) {
 	(void) session_handle;
-	std::cout << "PI_batch_begin\n";
+	Logger::debug("PI_batch_begin");
 	return PI_STATUS_SUCCESS;
 }
 
 pi_status_t _pi_batch_end(pi_session_handle_t session_handle, bool hw_sync) {
 	(void) session_handle;
 	(void) hw_sync;
-	std::cout << "PI_batch_end\n";
+	Logger::debug("PI_batch_end");
 	return PI_STATUS_SUCCESS;
 }
 
@@ -138,7 +139,7 @@ pi_status_t _pi_packetout_send(pi_dev_id_t dev_id, const char *pkt, size_t size)
 	(void)dev_id;
 	(void)pkt;
 	(void)size;
-	std::cout << "PI_packetout_send\n";
+	Logger::debug("PI_packetout_send");
 	return PI_STATUS_SUCCESS;
 }
 
