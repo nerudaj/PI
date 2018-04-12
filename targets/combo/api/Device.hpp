@@ -17,6 +17,18 @@ namespace p4 {
 	protected:
 		p4dev_t info; ///< Device info
 		std::unordered_map<std::string, Table> tables; ///< Tables, indexed by their identifier in P4 program
+		
+		class RegisterArray {
+		protected:
+			p4_register_t *registerArray;
+			uint32_t registerCount;
+			std::unordered_map<std::string, Register> registers;
+			
+		public:
+			uint32_t initialize(p4dev_t *deviceInfo);
+			p4::Register *getRegister(const char *name);
+			void deinitialize();
+		} registers;
 	
 	public:
 		/**
@@ -68,6 +80,15 @@ namespace p4 {
 		 *  NULL is returned.
 		 */
 		TablePtr getTable(const char *name);
+		
+		/**
+		 *  \brief Retrieve P4 register abstraction
+		 *  
+		 *  \param [in] name Register identifier in P4 program
+		 *  \return If the name exists, pointer to register is returned, otherwise
+		 *  NULL is returned
+		 */
+		RegisterPtr getRegister(const char name) { registers.getRegister(name); }
 		
 		/**
 		 *  \brief Get array of names of tables available in device

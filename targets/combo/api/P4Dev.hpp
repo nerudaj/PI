@@ -8,6 +8,7 @@
 #include <p4rule.h>
 
 #include "Table.hpp"
+#include "Register.hpp"
 #include "Device.hpp"
 
 #endif
