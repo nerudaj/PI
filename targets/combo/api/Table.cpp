@@ -31,14 +31,14 @@ uint32_t Table::deleteRuleRaw(uint32_t index) {
 	if (not (index == DEFAULT_RULE_INDEX)) {
 		if (type == P4ENGINE_TCAM) {
 			// Maintain the order of items (O(n) deletion)
-			for (uint32_t i = index; i < getTableSize() + RULES_BEGIN - 1; i++) {
+			for (uint32_t i = index; i < getSize() + RULES_BEGIN - 1; i++) {
 				rules[index] = rules[index + 1];
 			}
-			rules[RULES_BEGIN + getTableSize() - 1] = NULL;
+			rules[RULES_BEGIN + getSize() - 1] = NULL;
 		}
 		else {
 			// Swap with last item (O(1) deletion)
-			uint32_t lastRule = RULES_BEGIN + getTableSize() - 1;
+			uint32_t lastRule = RULES_BEGIN + getSize() - 1;
 			rules[index] = rules[lastRule];
 			rules[lastRule] = NULL;
 		}
@@ -57,7 +57,7 @@ uint32_t Table::writeRules() {
 	}
 	
 	p4rule_t **data = rules.data();
-	uint32_t rulesRealSize = getTableSize() + 1;
+	uint32_t rulesRealSize = getSize() + 1;
 	if (not hasDefaultRule()) {
 		data += RULES_BEGIN; // Skip empty default rule
 		rulesRealSize--;
@@ -88,7 +88,7 @@ uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index, bool overwrite) {
 	assert(rule->engine == type);
 
 	// Check table capacity
-	if (getTableSize() == getTableCapacity()) {
+	if (getSize() == getTableCapacity()) {
 		std::cerr << "ERROR:Table - Table full\n";
 		return P4DEV_ERROR; // TODO: P4DEV_TABLE_FULL;
 	}
@@ -107,7 +107,7 @@ uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index, bool overwrite) {
 	}
 	else {
 		// If no, compute where to put the rule
-		newIndex = RULES_BEGIN + getTableSize();
+		newIndex = RULES_BEGIN + getSize();
 	}
 	
 	rules[newIndex] = rule;
@@ -143,7 +143,7 @@ uint32_t Table::modifyRule(uint32_t index, const char *actionName, p4param_t *pa
 	
 	assert(actionName != NULL);
 
-	if (index >= getTableSize()) {
+	if (index >= getSize()) {
 		return P4DEV_ERROR;
 	}
 
@@ -168,7 +168,7 @@ uint32_t Table::deleteRule(uint32_t index) {
 	std::cout << "Table::deleteRule(...)\n";
 	#endif
 	
-	if (index >= getTableSize()) {
+	if (index >= getSize()) {
 		return P4DEV_ERROR;
 	}
 	
@@ -194,7 +194,7 @@ uint32_t Table::findRule(p4key_elem_t* key, uint32_t &index) {
 	
 	assert(key != NULL);
 	
-	for (uint32_t i = RULES_BEGIN; i < getTableSize() + RULES_BEGIN; i++) {
+	for (uint32_t i = RULES_BEGIN; i < getSize() + RULES_BEGIN; i++) {
 		if (keysMatch(rules[i]->key, key)) {
 			index = i - RULES_BEGIN;
 			return P4DEV_OK;
@@ -209,7 +209,7 @@ p4rule_t *p4::Table::getRule(uint32_t index) {
 	std::cout << "Table::getRule(...)\n";
 	#endif
 
-	if (index >= getTableSize()) {
+	if (index >= getSize()) {
 		return NULL;
 	}
 

@@ -131,14 +131,14 @@ namespace p4 {
 		 *  
 		 *  \details This number does not include default rule.
 		 */
-		uint32_t getTableSize() const { return size; }
+		uint32_t getSize() const { return size; }
 		
 		/**
 		 *  \brief Returns maximum number of rules that can be stored in the table
 		 *  
 		 *  \details This number does not include default rule.
 		 */
-		uint32_t getTableCapacity() const { return rules.size() - 1; }
+		uint32_t getCapacity() const { return rules.size() - 1; }
 		
 		/**
 		 *  \brief Prepares instantion to be used
