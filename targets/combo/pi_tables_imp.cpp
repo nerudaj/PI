@@ -507,7 +507,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 
 	res->p4info = info;
 	res->num_direct_resources = res->num_entries;
-	res->num_entries = table->getTableSize();
+	res->num_entries = table->getSize();
 	size_t dataSize = 0U;
 
 	dataSize += res->num_entries * sizeof(s_pi_entry_handle_t);
