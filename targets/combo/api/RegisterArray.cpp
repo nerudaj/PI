@@ -1,8 +1,6 @@
 #include "P4Dev.hpp"
 
-using p4::Device::RegisterArray; ///< Declared in the protected section of Device
-
-uint32_t RegisterArray::initialize(p4dev_t *deviceInfo) {
+uint32_t p4::Device::RegisterArray::initialize(p4dev_t *deviceInfo) {
 	uint32_t status = p4dev_registers_get(deviceInfo, &registerArray, &registerCount);
 	if (status != P4DEV_OK) return status;
 	
@@ -14,12 +12,12 @@ uint32_t RegisterArray::initialize(p4dev_t *deviceInfo) {
 	return P4DEV_OK;
 }
 
-p4::Register *RegisterArray::getRegister(const char *name) {
+p4::Register *p4::Device::RegisterArray::getRegister(const char *name) {
 	auto itr = registers.find(name);
 	if (itr == registers.end()) return NULL;
 	return &(itr->second);
 }
 
-void RegisterArray::deinitialize() {
+void p4::Device::RegisterArray::deinitialize() {
 	p4dev_registers_free(registerArray, registerCount);
 }
