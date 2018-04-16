@@ -13,6 +13,8 @@ pi_meter_imp.cpp \
 pi_learn_imp.cpp \
 api/Device.cpp \
 api/Table.cpp \
+api/Register.cpp \
+api/RegisterArray.cpp \
 devices.cpp \
 helpers.cpp
 
