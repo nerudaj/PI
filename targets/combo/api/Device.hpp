@@ -88,7 +88,7 @@ namespace p4 {
 		 *  \return If the name exists, pointer to register is returned, otherwise
 		 *  NULL is returned
 		 */
-		RegisterPtr getRegister(const char name) { registers.getRegister(name); }
+		RegisterPtr getRegister(const char* name) { registers.getRegister(name); }
 		
 		/**
 		 *  \brief Get array of names of tables available in device
