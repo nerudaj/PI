@@ -54,6 +54,8 @@ namespace p4 {
 		 */
 		void initialize(p4dev_t *deviceInfo, p4_register_t *registerInfo);
 	};
+	
+	typedef Register* RegisterPtr;
 };
 
 #endif
