@@ -88,7 +88,7 @@ uint32_t Table::insertRule(p4rule_t *rule, uint32_t &index, bool overwrite) {
 	assert(rule->engine == type);
 
 	// Check table capacity
-	if (getSize() == getTableCapacity()) {
+	if (getSize() == getCapacity()) {
 		std::cerr << "ERROR:Table - Table full\n";
 		return P4DEV_ERROR; // TODO: P4DEV_TABLE_FULL;
 	}
