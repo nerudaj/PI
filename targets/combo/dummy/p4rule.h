@@ -61,10 +61,10 @@
  * \brief Enumeration of known engines 
  */
 typedef enum {
+    P4ENGINE_UNKNOWN,  /*!< Unknown engine */
     P4ENGINE_TCAM,    /*!< TCAM engine */
     P4ENGINE_LPM,     /*!< LPM engine */
-    P4ENGINE_CUCKOO,  /*!< Cuckoo engine */
-    P4ENGINE_UNKNOWN  /*!< Unknown engine */
+    P4ENGINE_CUCKOO  /*!< Cuckoo engine */
 } p4engine_type_t;
 
 /*!

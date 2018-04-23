@@ -63,7 +63,7 @@ API p4rule_t * p4rule_create(const char * table, const p4engine_type_t engine) {
     retval->param  = NULL;
     retval->def    = false;
     retval->private_param = NULL;
-    retval->table_name = strndup(table,128);
+    retval->table_name = strndup(table, 128);
     if (!retval->table_name) {
         free(retval);
         return NULL;

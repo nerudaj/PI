@@ -9,6 +9,9 @@ p4dev.o: p4dev.c p4dev.h
 p4dev_tree.o: p4dev_tree.c p4dev_tree.h
 	$(CC) $(CFLAGS) -fPIC $^ -c
 
+p4dev_reg.o: p4dev_reg.c p4dev_reg.h
+	$(CC) $(CFLAGS) -fPIC $^ -c
+	
 p4rule.o: p4rule.c p4rule.h
 	$(CC) $(CFLAGS) -fPIC $^ -c
 
@@ -30,7 +33,7 @@ standard.o: engines/standard.c engines/standard.h
 tcam.o: engines/tcam.c engines/tcam.h
 	$(CC) $(CFLAGS) -fPIC $^ -c
 
-libp4dev-d.so: p4dev.o p4dev_tree.o p4rule.o bst_lpm.o bstlpm.o vector.o cuckoo.o standard.o tcam.o
+libp4dev-d.so: p4dev.o p4dev_tree.o p4dev_reg.o p4rule.o bst_lpm.o bstlpm.o vector.o cuckoo.o standard.o tcam.o
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
 install-local: libp4dev-d.so

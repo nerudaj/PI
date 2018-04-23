@@ -72,6 +72,7 @@ extern "C" {
 
 #include "p4dev_types.h" 
 #include "p4rule.h"
+#include "p4dev_reg.h"
 
 
 #ifndef _P4DEV_H_

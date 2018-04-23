@@ -144,7 +144,10 @@ enum P4DEV_RETURN_CODES {
     /*! \brief The function was unable to insert all rules */
     P4DEV_UNABLE_TO_INSERT              =   0x13,
     /*! \brief The function wasn't able to allocate system memory */
-    P4DEV_ALLOCATE_ERROR                =   0x14
+    P4DEV_ALLOCATE_ERROR                =   0x14,
+	P4DEV_NO_REG						=	0x15,
+	P4DEV_SMALL_BUFFER					=	0x16,
+	P4DEV_REG_INDEX_ERROR				=	0x17
 };
 
 /*! 
@@ -171,7 +174,10 @@ static const char* P4DEV_STR_RETURN_CODES[] = {
     [P4DEV_DEVICE_TREE_READING_ERROR]   = "P4DEV_DEVICE_TREE_READING_ERROR",
     [P4DEV_NO_CALLBACK]                 = "P4DEV_NO_CALLBACK",
     [P4DEV_UNABLE_TO_INSERT]            = "P4DEV_UNABLE_TO_INSERT",
-    [P4DEV_ALLOCATE_ERROR]              = "P4DEV_ALLOCATE_ERROR"
+    [P4DEV_ALLOCATE_ERROR]              = "P4DEV_ALLOCATE_ERROR",
+    [P4DEV_NO_REG]             			= "P4DEV_NO_REG",
+    [P4DEV_SMALL_BUFFER]             	= "P4DEV_SMALL_BUFFER",
+    [P4DEV_REG_INDEX_ERROR]             = "P4DEV_REG_INDEX_ERROR"
 };
 
 /*! 
