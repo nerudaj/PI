@@ -21,7 +21,7 @@ bool Table::keysMatch(const p4key_elem_t* first, const p4key_elem_t* second) {
 		tcam_p4key_cmp, bstlpm_p4key_cmp, cuckoo_p4key_cmp
 	};
 	
-	return comparators[type](first, second);
+	return comparators[type - 1](first, second);
 }
 
 uint32_t Table::deleteRuleRaw(uint32_t index) {
