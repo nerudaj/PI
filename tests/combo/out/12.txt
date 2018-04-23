@@ -5,5 +5,3 @@ Rule for table: ipv4_lpm
 	Action: set_nhop
 	Params: nhop_ipv4(10001)->port(01)
 
-=== RULES DUMP ===
-
