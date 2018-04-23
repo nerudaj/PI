@@ -33,6 +33,7 @@ message P4Info {
   repeated ControllerPacketMetadata controller_packet_metadata = 9;
   repeated ValueSet value_sets = 10;
   repeated Register registers = 11;
+  repeated Digest digests = 12;
   repeated Extern externs = 100;
   P4TypeInfo type_info = 200;
 }
@@ -47,22 +48,58 @@ message Documentation {
 // Top-level package documentation describing the forwarding pipeline config
 // Can be used to manage multiple P4 packages.
 message PkgInfo {
-    // a definitive name for this configuration, e.g. switch.p4_v1.0
-    string name = 1;
-    // configuration version, free-format string
-    string version = 2;
-    // brief and detailed descriptions
-    Documentation doc = 3;
-    // Miscellaneous metadata, free-form; a way to extend PkgInfo
-    repeated string annotations = 4;
-    // the target architecture, e.g. "psa"
-    string arch = 5;
-    // organization which produced the configuration, e.g. "p4.org"
-    string organization = 6;
-    // contact info for support,e.g. "tech-support@acme.org"
-    string contact = 7;
-    // url for more information, e.g. "http://support.p4.org/ref/p4/switch.p4_v1.0"
-    string url = 8;
+  // a definitive name for this configuration, e.g. switch.p4_v1.0
+  string name = 1;
+  // configuration version, free-format string
+  string version = 2;
+  // brief and detailed descriptions
+  Documentation doc = 3;
+  // Miscellaneous metadata, free-form; a way to extend PkgInfo
+  repeated string annotations = 4;
+  // the target architecture, e.g. "psa"
+  string arch = 5;
+  // organization which produced the configuration, e.g. "p4.org"
+  string organization = 6;
+  // contact info for support,e.g. "tech-support@acme.org"
+  string contact = 7;
+  // url for more information, e.g. "http://support.p4.org/ref/p4/switch.p4_v1.0"
+  string url = 8;
+}
+
+// wrapping the enum in a message to avoid name collisions in C++, where "enum
+// values are siblings of their type, not children of it"
+message P4Ids {
+  // ids are allocated in such a way that it is possible based on an id to
+  // deduce the resource type (e.g. table, action, counter, ...). The
+  // most-significant byte of the 32-bit id encodes the resource type. The
+  // purpose of this enum is to define which value is used as the
+  // most-significant byte for each resource type. The P4 compiler must use
+  // these values when allocating ids for P4 objects. Other users of P4Info can
+  // refer to this enum to identify a resource type based on its id.
+  enum Prefix {
+    UNSPECIFIED = 0;
+
+    // P4 language built-ins
+    ACTION = 0x01;
+    TABLE = 0x02;
+    VALUE_SET = 0x03;
+
+    // PSA externs
+    PSA_EXTERNS_START = 0x10;
+    ACTION_PROFILE = 0x11;
+    COUNTER = 0x12;
+    DIRECT_COUNTER = 0x13;
+    METER = 0x14;
+    DIRECT_METER = 0x15;
+
+    // externs for other architectures (vendor extensions)
+    OTHER_EXTERNS_START = 0x80;
+
+    // max value for an unsigned 8-bit byte
+    MAX = 0xff;
+    // requires protoc >= 3.5.0
+    // reserved 0x100 to max;
+  }
 }
 
 message Preamble {
@@ -80,7 +117,7 @@ message Preamble {
   // an alias for the P4 object, probably shorter than its name. The only
   // constraint is for it to be unique with respect to other P4 objects of the
   // same type. By default, the compiler uses the shortest suffix of the name
-  // that uniquely indentifies the object. For example if the P4 program
+  // that uniquely identifies the object. For example if the P4 program
   // contains two tables with names s.c1.t and s.c2.t, the default aliases will
   // respectively be c1.t and c2.t. The P4 programmer may also override the
   // default alias for any P4 object (TBD). When resolving a P4 object id, an
@@ -275,4 +312,9 @@ message Register {
   Preamble preamble = 1;
   P4DataTypeSpec type_spec = 2;
   int32 size = 3;
+}
+
+message Digest {
+  Preamble preamble = 1;
+  P4DataTypeSpec type_spec = 2;
 }
