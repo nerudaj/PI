@@ -22,31 +22,38 @@
 
 #include <string>
 #include <mutex>
+#include <unordered_map>
+#include <utility>
+
+typedef std::unordered_map<uint32_t, int> LpmRuleMap;
+typedef std::unordered_map<uint32_t, std::pair<uint32_t, uint16_t>> NextHopMap;
 
 struct MHD_Daemon;
 
 class SimpleRouterMgr;
 
 class WebServer {
- public:
-  WebServer(SimpleRouterMgr *simple_router_mgr, int port = 8888);
-  ~WebServer();
+private:
+	SimpleRouterMgr *simple_router_mgr{nullptr};
+	int port;
+	std::string current_json{""};
+	struct MHD_Daemon *daemon{NULL};
+	mutable std::mutex mutex;
 
-  void set_json_name(const std::string &json_name);
-  std::string get_json_name() const;
+public:
+	WebServer(SimpleRouterMgr *simple_router_mgr, int port = 8888);
+	~WebServer();
 
-  int query_counter(const std::string &counter_name, size_t index,
-                    uint64_t *packets, uint64_t *bytes);
+	void set_json_name(const std::string &json_name);
+	std::string get_json_name() const;
 
-  int update_json_config(const std::string &config_buffer,
-                         const std::string *p4info_buffer);
+	int query_counter(const std::string &counter_name, size_t index, uint64_t *packets, uint64_t *bytes);
+	int update_json_config(const std::string &config_buffer, const std::string *p4info_buffer);
 
-  int start();
+	int add_route(uint32_t prefix, int pLen, uint32_t nhop, uint16_t port);
+	int del_route(uint32_t prefix, int pLen);
+	int start();
 
- private:
-  SimpleRouterMgr *simple_router_mgr{nullptr};
-  int port;
-  std::string current_json{""};
-  struct MHD_Daemon *daemon{NULL};
-  mutable std::mutex mutex;
+	const LpmRuleMap &get_lpm_rule_map() const;
+	const NextHopMap &get_next_hop_map() const;
 };

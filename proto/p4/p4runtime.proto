@@ -17,6 +17,7 @@ syntax = "proto3";
 import "google/protobuf/any.proto";
 import "google/rpc/status.proto";
 import "p4/config/p4info.proto";
+import "p4/p4types.proto";
 
 // P4_14 spec: http://p4.org/wp-content/uploads/2015/04/p4-latest.pdf
 
@@ -100,6 +101,8 @@ message Entity {
     DirectCounterEntry direct_counter_entry = 8;
     PacketReplicationEngineEntry packet_replication_engine_entry = 9;
     ValueSetEntry value_set_entry = 10;
+    RegisterEntry register_entry = 11;
+    DigestEntry digest_entry = 12;
   }
 }
 
@@ -300,7 +303,7 @@ message MeterConfig {
 //------------------------------------------------------------------------------
 // For WriteRequest, Update.Type must be MODIFY.
 // For ReadRequest, the scope is defined as follows:
-// - All counter cells for all meters if counter_id = 0 (default).
+// - All counter cells for all counters if counter_id = 0 (default).
 // - All counter cells for given counter_id if index is unset (default).
 message CounterEntry {
   uint32 counter_id = 1;
@@ -391,11 +394,34 @@ message ValueSetEntry {
   repeated FieldMatch match = 2;
 }
 
+message RegisterEntry {
+  uint32 register_id = 1;
+  Index index = 2;
+  P4Data data = 3;
+}
+
+// Used to configure the digest extern only, not to stream digests or acks
+message DigestEntry {
+  uint32 digest_id = 1;
+  // a DigestList message is streamed when the following conditions are met:
+  //   - there is at least one digest ready
+  //   - the oldest digest in the list has been waiting for at least
+  //     max_timeout_ns nanoseconds or we have gathered max_list_size digests
+  //     already
+  message Config {
+    int64 max_timeout_ns = 1;  // max timeout for outstanding digest data
+    int32 max_list_size = 2;  // max size for a digest list
+    int64 ack_timeout_ns = 3;  // timeout for DigestListAck message
+  }
+  Config config = 2;
+}
+
 //------------------------------------------------------------------------------
 message StreamMessageRequest {
   oneof update {
     MasterArbitrationUpdate arbitration = 1;
     PacketOut packet = 2;
+    DigestListAck digest_ack = 3;
   }
 }
 
@@ -408,10 +434,20 @@ message PacketOut {
   repeated PacketMetadata metadata = 2;
 }
 
+// Used by the controller to ack a DigestList message. To avoid flooding the
+// controller, the switch must not generate digest notifications for the same
+// data until a DigestListAck message with the same list_id is received or the
+// ack timeout (ack_timeout_ns field in DigestEntry.Config) expires.
+message DigestListAck {
+  uint32 digest_id = 1;
+  uint64 list_id = 2;
+}
+
 message StreamMessageResponse {
   oneof update {
     MasterArbitrationUpdate arbitration = 1;
     PacketIn packet = 2;
+    DigestList digest = 3;
   }
 }
 
@@ -422,6 +458,17 @@ message PacketIn {
   // @controller_header("packet_in").
   // At most one P4 header can have this annotation.
   repeated PacketMetadata metadata = 2;
+}
+
+message DigestList {
+  uint32 digest_id = 1;  // identifies the digest extern instance
+  uint64 list_id = 2;  // identifies a list of entries, used by receiver to ack
+  // List of entries: each call to the Digest<T>::pack() method corresponds to
+  // one entry and we can have as little as one entry.
+  repeated P4Data data = 3;
+  // Timestamp at which the server generated the message (in nanoseconds since
+  // Epoch)
+  int64 timestamp = 4;
 }
 
 // Any metadata associated with Packet-IO (controller Packet-In or Packet-Out)

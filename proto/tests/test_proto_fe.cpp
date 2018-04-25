@@ -26,11 +26,13 @@
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/util/message_differencer.h>
 
+#include <atomic>
 #include <fstream>  // std::ifstream
 #include <iterator>  // std::distance
 #include <memory>
 #include <ostream>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <vector>
 
@@ -197,7 +199,6 @@ class DeviceMgrTest : public ::testing::Test {
     // assert is false
     config.release_p4info();
     ASSERT_EQ(status.code(), Code::OK);
-    mock->set_p4info(p4info);
   }
 
   void TearDown() override { }
@@ -219,6 +220,15 @@ class DeviceMgrTest : public ::testing::Test {
     auto table_entry = entity.mutable_table_entry();
     table_entry->set_table_id(t_id);
     return mgr.read_one(entity, response);
+  }
+
+  DeviceMgr::Status read_table_entry(p4::TableEntry *table_entry,
+                                     p4::ReadResponse *response) {
+    p4::Entity entity;
+    entity.set_allocated_table_entry(table_entry);
+    auto status = mgr.read_one(entity, response);
+    entity.release_table_entry();
+    return status;
   }
 
   static constexpr const char *input_path =
@@ -473,26 +483,40 @@ TEST_P(MatchTableTest, AddAndRead) {
   auto entry_matcher = CorrectTableEntryDirect(a_id, adata);
   EXPECT_CALL(*mock, table_entry_add(t_id, mk_matcher, entry_matcher, _))
       .Times(AtLeast(1));
-  DeviceMgr::Status status;
   uint64_t controller_metadata(0xab);
   auto entry = generic_make(t_id, mk_input.get_proto(mf_id), adata,
                             mk_input.get_priority(), controller_metadata);
-  status = add_one(&entry);
-  EXPECT_EQ(status.code(), Code::OK);
+  {
+    auto status = add_one(&entry);
+    EXPECT_EQ(status.code(), Code::OK);
+  }
   // second is error because duplicate match key
-  status = add_one(&entry);
-  EXPECT_EQ(status, OneExpectedError(Code::ALREADY_EXISTS));
+  {
+    auto status = add_one(&entry);
+    EXPECT_EQ(status, OneExpectedError(Code::ALREADY_EXISTS));
+  }
 
-  EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
-  p4::ReadResponse response;
-  p4::Entity entity;
-  auto table_entry = entity.mutable_table_entry();
-  table_entry->set_table_id(t_id);
-  status = mgr.read_one(entity, &response);
-  ASSERT_EQ(status.code(), Code::OK);
-  const auto &entities = response.entities();
-  ASSERT_EQ(1, entities.size());
-  EXPECT_TRUE(MessageDifferencer::Equals(entry, entities.Get(0).table_entry()));
+  EXPECT_CALL(*mock, table_entries_fetch(t_id, _)).Times(2);
+  // 2 different reads: first one is wildcard read on the table, other filters
+  // on the match key.
+  {
+    p4::ReadResponse response;
+    auto status = read_table_entries(t_id, &response);
+    ASSERT_EQ(status.code(), Code::OK);
+    const auto &entities = response.entities();
+    ASSERT_EQ(1, entities.size());
+    EXPECT_TRUE(
+        MessageDifferencer::Equals(entry, entities.Get(0).table_entry()));
+  }
+  {
+    p4::ReadResponse response;
+    auto status = read_table_entry(&entry, &response);
+    ASSERT_EQ(status.code(), Code::OK);
+    const auto &entities = response.entities();
+    ASSERT_EQ(1, entities.size());
+    EXPECT_TRUE(
+        MessageDifferencer::Equals(entry, entities.Get(0).table_entry()));
+  }
 }
 
 TEST_P(MatchTableTest, AddAndDelete) {
@@ -1358,16 +1382,34 @@ TEST_F(DirectMeterTest, WriteAndRead) {
     ASSERT_EQ(status.code(), Code::OK);
   }
 
+  // read with DirectMeterEntry
   EXPECT_CALL(*mock, meter_read_direct(m_id, entry_h, _));
-  p4::ReadResponse response;
   {
+    p4::ReadResponse response;
     auto status = read_meter(&meter_entry, &response);
     ASSERT_EQ(status.code(), Code::OK);
+    const auto &entities = response.entities();
+    ASSERT_EQ(1, entities.size());
+    const auto &read_entry = entities.Get(0).direct_meter_entry();
+    EXPECT_TRUE(MessageDifferencer::Equals(meter_entry, read_entry));
   }
-  const auto &entities = response.entities();
-  ASSERT_EQ(1, entities.size());
-  const auto &read_meter_entry = entities.Get(0).direct_meter_entry();
-  EXPECT_TRUE(MessageDifferencer::Equals(meter_entry, read_meter_entry));
+
+  // read with TableEntry
+  EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
+  {
+    p4::ReadResponse response;
+    p4::Entity entity;
+    auto table_entry = entity.mutable_table_entry();
+    table_entry->set_table_id(t_id);
+    table_entry->mutable_meter_config();
+    auto status = mgr.read_one(entity, &response);
+
+    ASSERT_EQ(status.code(), Code::OK);
+    const auto &entities = response.entities();
+    ASSERT_EQ(1, entities.size());
+    const auto &read_entry = entities.Get(0).table_entry();
+    EXPECT_TRUE(MessageDifferencer::Equals(config, read_entry.meter_config()));
+  }
 }
 
 TEST_F(DirectMeterTest, WriteInTableEntry) {
@@ -1551,19 +1593,38 @@ TEST_F(DirectCounterTest, WriteAndRead) {
     auto status = write_counter(&counter_entry);
     ASSERT_EQ(status.code(), Code::OK);
   }
+
+  // read with DirectCounterEntry
   EXPECT_CALL(*mock, counter_read_direct(c_id, entry_h, _, _));
-  p4::ReadResponse response;
   {
+    p4::ReadResponse response;
     auto status = read_counter(&counter_entry, &response);
     ASSERT_EQ(status.code(), Code::OK);
+    const auto &entities = response.entities();
+    ASSERT_EQ(1, entities.size());
+    const auto &read_entry = entities.Get(0).direct_counter_entry();
+    EXPECT_TRUE(MessageDifferencer::Equals(entry, read_entry.table_entry()));
+    EXPECT_EQ(read_entry.data().byte_count(), 0);
+    EXPECT_EQ(read_entry.data().packet_count(), 3);
   }
-  const auto &entities = response.entities();
-  ASSERT_EQ(1, entities.size());
-  const auto &read_counter_entry = entities.Get(0).direct_counter_entry();
-  EXPECT_TRUE(MessageDifferencer::Equals(entry,
-                                         read_counter_entry.table_entry()));
-  EXPECT_EQ(read_counter_entry.data().byte_count(), 0);
-  EXPECT_EQ(read_counter_entry.data().packet_count(), 3);
+
+  // read with TableEntry
+  EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
+  {
+    p4::ReadResponse response;
+    p4::Entity entity;
+    auto table_entry = entity.mutable_table_entry();
+    table_entry->set_table_id(t_id);
+    table_entry->mutable_counter_data();
+    auto status = mgr.read_one(entity, &response);
+
+    ASSERT_EQ(status.code(), Code::OK);
+    const auto &entities = response.entities();
+    ASSERT_EQ(1, entities.size());
+    const auto &read_entry = entities.Get(0).table_entry();
+    EXPECT_EQ(read_entry.counter_data().byte_count(), 0);
+    EXPECT_EQ(read_entry.counter_data().packet_count(), 3);
+  }
 }
 
 TEST_F(DirectCounterTest, InvalidTableEntry) {
@@ -1822,7 +1883,7 @@ TEST_F(MatchKeyFormatTest, BadLeadingZeros) {
 }
 
 
-#define EXPECT_ONE_TABLE_ENTRY(repsonse, expected_entry) \
+#define EXPECT_ONE_TABLE_ENTRY(response, expected_entry) \
   do {                                                   \
     const auto &entities = response.entities();          \
     ASSERT_EQ(1, entities.size());                       \
@@ -2324,6 +2385,170 @@ TEST_F(PVSTest, Read) {
   (void) pvs_entry;
   auto status = mgr.read(request, &response);
   EXPECT_EQ(status.code(), Code::UNIMPLEMENTED);
+}
+
+// Placeholder for Register tests: for now there is no support in DeviceMgr
+class RegisterTest : public DeviceMgrTest { };
+
+TEST_F(RegisterTest, Write) {
+  p4::WriteRequest request;
+  auto *update = request.add_updates();
+  update->set_type(p4::Update_Type_MODIFY);
+  auto *entity = update->mutable_entity();
+  auto *register_entry = entity->mutable_register_entry();
+  (void) register_entry;
+  auto status = mgr.write(request);
+  EXPECT_EQ(status, OneExpectedError(Code::UNIMPLEMENTED));
+}
+
+TEST_F(RegisterTest, Read) {
+  p4::ReadRequest request;
+  p4::ReadResponse response;
+  auto *entity = request.add_entities();
+  auto *register_entry = entity->mutable_register_entry();
+  (void) register_entry;
+  auto status = mgr.read(request, &response);
+  EXPECT_EQ(status.code(), Code::UNIMPLEMENTED);
+}
+
+// Placeholder for Digest tests: for now there is no support in DeviceMgr
+class DigestTest : public DeviceMgrTest { };
+
+TEST_F(DigestTest, Write) {
+  p4::WriteRequest request;
+  auto *update = request.add_updates();
+  update->set_type(p4::Update_Type_MODIFY);
+  auto *entity = update->mutable_entity();
+  auto *register_entry = entity->mutable_register_entry();
+  (void) register_entry;
+  auto status = mgr.write(request);
+  EXPECT_EQ(status, OneExpectedError(Code::UNIMPLEMENTED));
+}
+
+TEST_F(DigestTest, Read) {
+  p4::ReadRequest request;
+  p4::ReadResponse response;
+  auto *entity = request.add_entities();
+  auto *register_entry = entity->mutable_register_entry();
+  (void) register_entry;
+  auto status = mgr.read(request, &response);
+  EXPECT_EQ(status.code(), Code::UNIMPLEMENTED);
+}
+
+// This test verifies that the ReadRequest gets a unique lock (no concurrent
+// writes).
+// We inherit from MatchTableIndirectTest as a convenience (to access all table
+// / action profile modifiers).
+class ReadExclusiveAccess : public MatchTableIndirectTest {
+ public:
+  ReadExclusiveAccess() {
+    t_id = pi_p4info_table_id_from_name(p4info, "IndirectWS");
+    act_prof_id = pi_p4info_act_prof_id_from_name(p4info, "ActProfWS");
+  }
+
+ protected:
+  pi_p4_id_t t_id;
+  pi_p4_id_t act_prof_id;
+};
+
+TEST_F(ReadExclusiveAccess, ConcurrentReadAndWrites) {
+  // one thread 1) adds action profile member, 2) adds table entry pointing to
+  // this member, 3) deletes table entry and 4) deletes member
+  // another thread reads action profile and table entry
+  // the test ensures that in the read response, we either have a) an empty
+  // table and an empty action profile, b) both the member and the table
+  // entry, or c) just the member. Based on read semantics, we cannot have just
+  // the table entry!!!
+
+  auto do_write = [this](size_t iters) {
+    EXPECT_CALL(*mock, action_prof_member_create(act_prof_id, _, _))
+        .Times(iters);
+    EXPECT_CALL(*mock, table_entry_add(t_id, _, _, _)).Times(iters);
+    EXPECT_CALL(*mock, table_entry_delete_wkey(t_id, _)).Times(iters);
+    EXPECT_CALL(*mock, action_prof_member_delete(act_prof_id, _)).Times(iters);
+
+    uint32_t member_id = 123;
+    std::string mf("\xaa\xbb\xcc\xdd", 4);
+    std::string adata(6, '\x00');
+    auto member = make_member(member_id, adata);
+    auto entry = make_indirect_entry_to_member(mf, member_id);
+
+    std::vector<p4::WriteRequest> requests(4);
+    {
+      auto &request = requests.at(0);
+      auto *update = request.add_updates();
+      update->set_type(p4::Update_Type_INSERT);
+      auto *entity = update->mutable_entity();
+      entity->mutable_action_profile_member()->CopyFrom(member);
+    }
+    {
+      auto &request = requests.at(1);
+      auto *update = request.add_updates();
+      update->set_type(p4::Update_Type_INSERT);
+      auto *entity = update->mutable_entity();
+      entity->mutable_table_entry()->CopyFrom(entry);
+    }
+    {
+      auto &request = requests.at(2);
+      auto *update = request.add_updates();
+      update->set_type(p4::Update_Type_DELETE);
+      auto *entity = update->mutable_entity();
+      entity->mutable_table_entry()->CopyFrom(entry);
+    }
+    {
+      auto &request = requests.at(3);
+      auto *update = request.add_updates();
+      update->set_type(p4::Update_Type_DELETE);
+      auto *entity = update->mutable_entity();
+      entity->mutable_action_profile_member()->CopyFrom(member);
+    }
+
+    for (size_t i = 0; i < iters; i++) {
+      for (const auto &request : requests) {
+        auto status = mgr.write(request);
+        EXPECT_EQ(status.code(), Code::OK);
+      }
+    }
+  };
+
+  std::atomic<bool> stop{false};
+
+  auto do_read = [this, &stop]() {
+    EXPECT_CALL(*mock, table_entries_fetch(t_id, _)).Times(AtLeast(1));
+    EXPECT_CALL(*mock, action_prof_entries_fetch(act_prof_id, _))
+        .Times(AtLeast(1));
+    p4::ReadRequest request;
+    {
+      auto *entity = request.add_entities();
+      auto *entry = entity->mutable_table_entry();
+      entry->set_table_id(t_id);
+    }
+    {
+      auto *entity = request.add_entities();
+      auto *member = entity->mutable_action_profile_member();
+      member->set_action_profile_id(act_prof_id);
+    }
+    while (!stop) {
+      p4::ReadResponse response;
+      auto status = mgr.read(request, &response);
+      ASSERT_EQ(status.code(), Code::OK);
+      const auto num_objects = response.entities_size();
+      ASSERT_TRUE(num_objects == 0 ||
+                  num_objects == 2 ||
+                  (num_objects == 1 &&
+                   response.mutable_entities(0)->has_action_profile_member()));
+    }
+  };
+
+  // 10,000 iterations
+  size_t iterations = 10000u;
+
+  std::thread t2(do_read);  // make sure we start reading before writing
+  std::thread t1(do_write, iterations);
+
+  t1.join();
+  stop = true;
+  t2.join();
 }
 
 }  // namespace

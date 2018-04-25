@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <combo.h>
 
 #ifndef _P4DEV_TYPES_H_
 #define _P4DEV_TYPES_H_
@@ -79,9 +80,9 @@
  * Each program is required to call the \ref p4dev_init function.
  */
 typedef struct p4dev {
-    //cs_device_t* cs;          /*!< Combo device */
-    //cs_space_t*  cs_space;    /*!< Combo space mapping */
-    void*  dt;          /*!< Device tree blob (describes the opened P4 device) */
+    cs_device_t* cs;          /*!< Combo device */
+    cs_space_t*  cs_space;    /*!< Combo space mapping */
+    const void*  dt;          /*!< Device tree blob (describes the opened P4 device) */
     uint32_t     dt_p4offset; /*!< Offset of a P4 node in the device tree */
 } p4dev_t;
 
@@ -143,13 +144,16 @@ enum P4DEV_RETURN_CODES {
     /*! \brief The function was unable to insert all rules */
     P4DEV_UNABLE_TO_INSERT              =   0x13,
     /*! \brief The function wasn't able to allocate system memory */
-    P4DEV_ALLOCATE_ERROR                =   0x14
+    P4DEV_ALLOCATE_ERROR                =   0x14,
+	P4DEV_NO_REG						=	0x15,
+	P4DEV_SMALL_BUFFER					=	0x16,
+	P4DEV_REG_INDEX_ERROR				=	0x17
 };
 
 /*! 
  * \brief String representation of possible return codes
  */
-const static char* P4DEV_STR_RETURN_CODES[] = {
+static const char* P4DEV_STR_RETURN_CODES[] = {
     [P4DEV_OK]                          = "P4DEV_OK",
     [P4DEV_UNABLE_TO_ATTACH]            = "P4DEV_UNABLE_TO_ATTACH",
     [P4DEV_UNKNOWN_ERR]                 = "P4DEV_UNKNOWN_ERR",
@@ -170,7 +174,10 @@ const static char* P4DEV_STR_RETURN_CODES[] = {
     [P4DEV_DEVICE_TREE_READING_ERROR]   = "P4DEV_DEVICE_TREE_READING_ERROR",
     [P4DEV_NO_CALLBACK]                 = "P4DEV_NO_CALLBACK",
     [P4DEV_UNABLE_TO_INSERT]            = "P4DEV_UNABLE_TO_INSERT",
-    [P4DEV_ALLOCATE_ERROR]              = "P4DEV_ALLOCATE_ERROR"
+    [P4DEV_ALLOCATE_ERROR]              = "P4DEV_ALLOCATE_ERROR",
+    [P4DEV_NO_REG]             			= "P4DEV_NO_REG",
+    [P4DEV_SMALL_BUFFER]             	= "P4DEV_SMALL_BUFFER",
+    [P4DEV_REG_INDEX_ERROR]             = "P4DEV_REG_INDEX_ERROR"
 };
 
 /*! 

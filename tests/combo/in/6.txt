@@ -1,0 +1,5 @@
+assign_device 0 0
+table_add ipv4_lpm 10.0.0.1/24 => set_nhop 10.0.0.1 1
+table_add ipv4_lpm 69.0.0.1/24 => set_nhop 69.0.0.1 42
+table_add ipv4_lpm 255.0.0.1/24 => set_nhop 255.0.0.1 10000
+quit

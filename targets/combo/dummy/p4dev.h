@@ -72,6 +72,7 @@ extern "C" {
 
 #include "p4dev_types.h" 
 #include "p4rule.h"
+#include "p4dev_reg.h"
 
 
 #ifndef _P4DEV_H_
@@ -88,9 +89,30 @@ extern "C" {
  */
 
 /*! \brief Identificator of the first card in the system */
-const static p4dev_name_t P4DEV_ID0 = "/dev/combo1";
+//static const p4dev_name_t P4DEV_ID0 = CS_PATH_DEV(0);
 /*! \brief Identificator of the second card in the system */
-const static p4dev_name_t P4DEV_ID1 = "/dev/combo2";
+//static const p4dev_name_t P4DEV_ID1 = CS_PATH_DEV(1);
+
+/******************************************************************************
+* API Functions
+*******************************************************************************/
+
+/*!
+ * \defgroup apifunc API Functions
+ * \brief Declaration of API headers which are capable to control a P4 device
+ * @{
+ */
+
+/*!
+ * \brief Get the right device path based on the supported communication library.
+ *
+ * \param [out] dst Pointer to the destination array which will be filled with the path.
+ * \param [in] len Lenght of the destionation buffer
+ * \param [in] id Selected device to open
+ *
+ * \return The function returns P4DEV_OK iff everything was OK.
+ */
+API uint32_t p4dev_get_device_path(char* dst, const uint32_t len, const uint32_t id);
 
 /*!
  * \brief Initialize the P4 device - directly with a given device tree structure.

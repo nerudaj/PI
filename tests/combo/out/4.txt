@@ -1,0 +1,6 @@
+=== RULES DUMP ===
+Rule for table: forward
+	Engine: EXACT
+	MatchKey: routing_metadata.nhop_ipv4(10666)
+	Action: _drop
+

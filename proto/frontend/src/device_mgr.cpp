@@ -18,12 +18,16 @@
  *
  */
 
+// shared mutex not available in C++11
+#include <boost/thread/shared_mutex.hpp>
+
 #include <PI/frontends/cpp/tables.h>
 #include <PI/frontends/proto/device_mgr.h>
 #include <PI/pi.h>
 #include <PI/proto/util.h>
 
 #include <algorithm>  // for std::all_of
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>  // for std::pair
@@ -143,9 +147,6 @@ class DeviceMgrImp {
     pi_remove_device(device_id);
   }
 
-  // we assume that the DeviceMgr client is smart enough here: for p4info
-  // updates we do not do any locking; we assume that the client will not issue
-  // table commands... while updating p4info
   void p4_change(const p4::config::P4Info &p4info_proto_new,
                  pi_p4info_t *p4info_new) {
     table_info_store.reset();
@@ -183,7 +184,9 @@ class DeviceMgrImp {
     pi_p4info_t *p4info_tmp = nullptr;
     if (a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY ||
         a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_SAVE ||
-        a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT) {
+        a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT ||
+        a == p4::SetForwardingPipelineConfigRequest_Action_RECONCILE_AND_COMMIT
+        ) {
       if (!pi::p4info::p4info_proto_reader(config.p4info(), &p4info_tmp))
         RETURN_ERROR_STATUS(Code::UNKNOWN, "Error when importing p4info");
     }
@@ -198,6 +201,8 @@ class DeviceMgrImp {
           "Invalid 'p4_device_config', not an instance of "
           "p4::tmp::P4DeviceConfig");
     }
+
+    auto lock = unique_lock();
 
     // check that p4info => device assigned
     assert(!p4info || pi_is_device_assigned(device_id));
@@ -241,7 +246,9 @@ class DeviceMgrImp {
     // assign device if needed, i.e. if device hasn't been assigned yet or if
     // the reassign flag is set
     if (a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_SAVE ||
-        a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT) {
+        a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT ||
+        a == p4::SetForwardingPipelineConfigRequest_Action_RECONCILE_AND_COMMIT
+        ) {
       if (pi_is_device_assigned(device_id) && p4_device_config.reassign())
         remove_device();
       if (!pi_is_device_assigned(device_id)) {
@@ -255,8 +262,23 @@ class DeviceMgrImp {
       }
     }
 
+    // for reconcile, as per the P4Runtime spec, we need to preserve the
+    // forwarding state if possible, which is why we do a read to store all
+    // existing state.
+    p4::ReadResponse forwarding_state;
+    if (a == p4::SetForwardingPipelineConfigRequest_Action_RECONCILE_AND_COMMIT
+        ) {
+      auto status = save_forwarding_state(&forwarding_state);
+      if (IS_ERROR(status)) {
+        pi_destroy_config(p4info_tmp);
+        return status;
+      }
+    }
+
     if (a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_SAVE ||
-        a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT) {
+        a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT ||
+        a == p4::SetForwardingPipelineConfigRequest_Action_RECONCILE_AND_COMMIT
+        ) {
       const auto &device_data = p4_device_config.device_data();
       pi_status = pi_update_device_start(device_id, p4info_tmp,
                                          device_data.data(),
@@ -269,8 +291,27 @@ class DeviceMgrImp {
       p4_change(config.p4info(), p4info_tmp);
     }
 
+    // for reconcile, replay the state saved before the pi_update_device_start
+    // call (which itself wipes the state)
+    if (a == p4::SetForwardingPipelineConfigRequest_Action_RECONCILE_AND_COMMIT
+        ) {
+      p4::WriteRequest write_request;
+      for (auto &entity : *forwarding_state.mutable_entities()) {
+        auto *update = write_request.add_updates();
+        update->set_type(p4::Update_Type_INSERT);
+        update->set_allocated_entity(&entity);
+      }
+      auto status = write_(write_request);
+      for (auto &update : *write_request.mutable_updates())
+        update.release_entity();
+      if (IS_ERROR(status))
+        RETURN_ERROR_STATUS(Code::UNKNOWN, "Error when reconciling config")
+    }
+
     if (a == p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT ||
-        a == p4::SetForwardingPipelineConfigRequest_Action_COMMIT) {
+        a == p4::SetForwardingPipelineConfigRequest_Action_COMMIT ||
+        a == p4::SetForwardingPipelineConfigRequest_Action_RECONCILE_AND_COMMIT
+        ) {
       pi_status = pi_update_device_end(device_id);
       if (pi_status != PI_STATUS_SUCCESS) {
         RETURN_ERROR_STATUS(Code::UNKNOWN,
@@ -290,113 +331,19 @@ class DeviceMgrImp {
   }
 
   Status write(const p4::WriteRequest &request) {
-    Status status;
-    status.set_code(Code::OK);
-    SessionTemp session(true  /* = batch */);
-    P4ErrorReporter error_reporter;
-    for (const auto &update : request.updates()) {
-      const auto &entity = update.entity();
-      switch (entity.entity_case()) {
-        case p4::Entity::kExternEntry:
-          Logger::get()->error("No extern support yet");
-          status.set_code(Code::UNIMPLEMENTED);
-          break;
-        case p4::Entity::kTableEntry:
-          status = table_write(update.type(), entity.table_entry(), session);
-          break;
-        case p4::Entity::kActionProfileMember:
-          status = action_profile_member_write(
-              update.type(), entity.action_profile_member(), session);
-          break;
-        case p4::Entity::kActionProfileGroup:
-          status = action_profile_group_write(
-              update.type(), entity.action_profile_group(), session);
-          break;
-        case p4::Entity::kMeterEntry:
-          status = meter_write(update.type(), entity.meter_entry(), session);
-          break;
-        case p4::Entity::kDirectMeterEntry:
-          status = direct_meter_write(
-              update.type(), entity.direct_meter_entry(), session);
-          break;
-        case p4::Entity::kCounterEntry:
-          status = counter_write(
-              update.type(), entity.counter_entry(), session);
-          break;
-        case p4::Entity::kDirectCounterEntry:
-          status = direct_counter_write(
-              update.type(), entity.direct_counter_entry(), session);
-          break;
-        case p4::Entity::kPacketReplicationEngineEntry:
-          status = ERROR_STATUS(Code::UNIMPLEMENTED,
-                                "Writing to PRE is not supported yet");
-          break;
-        case p4::Entity::kValueSetEntry:  // TODO(antonin)
-          status = ERROR_STATUS(Code::UNIMPLEMENTED,
-                                "ValueSet writes are not supported yet");
-          break;
-        default:
-          status = ERROR_STATUS(Code::UNKNOWN, "Incorrect entity type");
-          break;
-      }
-      error_reporter.push_back(status);
-    }
-    return error_reporter.get_status();
+    auto lock = shared_lock();
+    return write_(request);
   }
 
   Status read(const p4::ReadRequest &request,
               p4::ReadResponse *response) const {
-    Status status;
-    status.set_code(Code::OK);
-    for (const auto &entity : request.entities()) {
-      status = read_one(entity, response);
-      if (status.code() != Code::OK) break;
-    }
-    return status;
+    auto lock = unique_lock();
+    return read_(request, response);
   }
 
   Status read_one(const p4::Entity &entity, p4::ReadResponse *response) const {
-    Status status;
-    SessionTemp session(false  /* = batch */);
-    switch (entity.entity_case()) {
-      case p4::Entity::kTableEntry:
-        status = table_read(entity.table_entry(), session, response);
-        break;
-      case p4::Entity::kActionProfileMember:
-        status = action_profile_member_read(
-            entity.action_profile_member(), session, response);
-        break;
-      case p4::Entity::kActionProfileGroup:
-        status = action_profile_group_read(
-            entity.action_profile_group(), session, response);
-        break;
-      case p4::Entity::kMeterEntry:
-        status = meter_read(entity.meter_entry(), session, response);
-        break;
-      case p4::Entity::kDirectMeterEntry:
-        status = direct_meter_read(
-            entity.direct_meter_entry(), session, response);
-        break;
-      case p4::Entity::kCounterEntry:
-        status = counter_read(entity.counter_entry(), session, response);
-        break;
-      case p4::Entity::kDirectCounterEntry:
-        status = direct_counter_read(
-            entity.direct_counter_entry(), session, response);
-        break;
-      case p4::Entity::kPacketReplicationEngineEntry:
-        status = ERROR_STATUS(Code::UNIMPLEMENTED,
-                              "Reading from PRE is not supported yet");
-        break;
-        case p4::Entity::kValueSetEntry:  // TODO(antonin)
-          status = ERROR_STATUS(Code::UNIMPLEMENTED,
-                                "ValueSet reads are not supported yet");
-          break;
-      default:
-        status = ERROR_STATUS(Code::UNKNOWN, "Incorrect entity type");
-        break;
-    }
-    return status;
+    auto lock = unique_lock();
+    return read_one_(entity, response);
   }
 
   Status table_write(p4::Update_Type update,
@@ -445,6 +392,8 @@ class DeviceMgrImp {
                             "INSERT update type not supported for meters");
       case p4::Update_Type_MODIFY:
         {
+          auto status = validate_meter_spec(meter_entry.config());
+          if (IS_ERROR(status)) return status;
           auto pi_meter_spec = meter_spec_proto_to_pi(
               meter_entry.config(), meter_entry.meter_id());
           auto pi_status = pi_meter_set(session.get(), device_tgt,
@@ -522,6 +471,8 @@ class DeviceMgrImp {
                             "INSERT update type not supported for meters");
       case p4::Update_Type_MODIFY:
         {
+          auto status = validate_meter_spec(meter_entry.config());
+          if (IS_ERROR(status)) return status;
           auto pi_meter_spec = meter_spec_proto_to_pi(
               meter_entry.config(), table_direct_meter_id);
           auto pi_status = pi_meter_set_direct(session.get(), device_tgt,
@@ -768,11 +719,16 @@ class DeviceMgrImp {
                              table_action->mutable_action());
   }
 
-  // An is a functor which will be called on entries and needs to append a new
-  // p4::TableEntry to entries and return a pointer to it
-  template <typename T, typename Accessor>
-  Status table_read_common(p4_id_t table_id, const SessionTemp &session,
-                           T *entries, Accessor An) const {
+  Status table_read_one(p4_id_t table_id,
+                        const p4::TableEntry &requested_entry,
+                        const SessionTemp &session,
+                        p4::ReadResponse *response) const {
+    pi::MatchKey expected_match_key(p4info.get(), table_id);
+    if (requested_entry.match_size() > 0) {
+      auto status = construct_match_key(requested_entry, &expected_match_key);
+      if (IS_ERROR(status)) return status;
+    }
+
     pi_table_fetch_res_t *res;
     auto table_lock = table_info_store.lock_table(table_id);
     auto pi_status = pi_table_entries_fetch(session.get(), device_id,
@@ -788,12 +744,57 @@ class DeviceMgrImp {
     pi::MatchKey mk(p4info.get(), table_id);
     for (size_t i = 0; i < num_entries; i++) {
       pi_table_entries_next(res, &entry, &entry_handle);
-      auto table_entry = An(entries);
+
+      // Very Very naive solution to filter on a specific match key: we iterate
+      // over ALL entries and compare the match key for each one.
+      // We require equality for every field, even priority, so this is reqlly
+      // just meant to be used as a very inefficient way to retrieve a single
+      // table entry...
+
+      // TODO(antonin): what I really want to do here is a heterogeneous lookup
+      // / comparison; instead I make a copy of the match key in the right
+      // format and I use this for the lookup. If this is a performance issue,
+      // we can find a better solution.
+      mk.from(entry.match_key);
+      if (requested_entry.match_size() > 0 &&
+          !pi::MatchKeyEq()(mk, expected_match_key)) {
+        continue;
+      }
+
+      auto *table_entry = response->add_entities()->mutable_table_entry();
       table_entry->set_table_id(table_id);
       code = parse_match_key(table_id, entry.match_key, table_entry);
       if (code != Code::OK) break;
       code = parse_action_entry(table_id, &entry.entry, table_entry);
       if (code != Code::OK) break;
+
+      // direct resources
+      auto *direct_configs = entry.entry.direct_res_config;
+      if (direct_configs != nullptr) {
+        for (size_t j = 0; j < direct_configs->num_configs; j++) {
+          const auto &config = direct_configs->configs[j];
+          if (pi_is_counter_id(config.res_id)) {
+            // TODO(antonin): according to a p4runtime.proto comment, we are
+            // supposed to include counter data if the table has a direct
+            // counter, irrespective of whether or not the counter_data field
+            // was set. However, it breaks some existing unit tests, so we use
+            // this if statement for the moment.
+            if (requested_entry.has_counter_data()) {
+              counter_data_pi_to_proto(
+                  *static_cast<pi_counter_data_t *>(config.config),
+                  table_entry->mutable_counter_data());
+            }
+          } else if (pi_is_meter_id(config.res_id)) {
+            if (requested_entry.has_meter_config()) {
+              meter_spec_pi_to_proto(
+                  *static_cast<pi_meter_spec_t *>(config.config),
+                  table_entry->mutable_meter_config());
+            }
+          } else {
+            RETURN_ERROR_STATUS(Code::INTERNAL, "Unknown direct resource type");
+          }
+        }
+      }
 
       // If table is const (immutable P4 table), it is possible that the entries
       // were added out-of-band, i.e. without the P4Runtime service. In this
@@ -802,11 +803,6 @@ class DeviceMgrImp {
       // controller metadata for these immutable entries.
       bool table_is_const = pi_p4info_table_is_const(p4info.get(), table_id);
       if (!table_is_const) {
-        // TODO(antonin): what I really want to do here is a heterogeneous
-        // lookup; instead I make a copy of the match key in the right format
-        // and I use this for the lookup. If this is a performance issue, we can
-        // find a better solution.
-        mk.from(entry.match_key);
         auto entry_data = table_info_store.get_entry(table_id, mk);
         // this would point to a serious bug in the implementation, and shoudn't
         // occur given that we keep the local state in sync with lower level
@@ -824,16 +820,7 @@ class DeviceMgrImp {
     RETURN_STATUS(code);
   }
 
-  Status table_read_one(p4_id_t table_id, const SessionTemp &session,
-                        p4::ReadResponse *response) const {
-    return table_read_common(
-        table_id, session, response,
-        [] (decltype(response) r) {
-          return r->add_entities()->mutable_table_entry(); });
-  }
-
   // TODO(antonin): full filtering on the match key, action, ...
-  // TODO(antonin): direct resources
   Status table_read(const p4::TableEntry &table_entry,
                     const SessionTemp &session,
                     p4::ReadResponse *response) const {
@@ -841,13 +828,14 @@ class DeviceMgrImp {
       for (auto t_id = pi_p4info_table_begin(p4info.get());
            t_id != pi_p4info_table_end(p4info.get());
            t_id = pi_p4info_table_next(p4info.get(), t_id)) {
-        auto status = table_read_one(t_id, session, response);
+        auto status = table_read_one(t_id, table_entry, session, response);
         if (IS_ERROR(status)) return status;
       }
     } else {  // read for a single table
       if (!check_p4_id(table_entry.table_id(), P4ResourceType::TABLE))
         return make_invalid_p4_id_status();
-      auto status = table_read_one(table_entry.table_id(), session, response);
+      auto status = table_read_one(
+          table_entry.table_id(), table_entry, session, response);
       if (IS_ERROR(status)) return status;
     }
     RETURN_OK_STATUS();
@@ -942,7 +930,7 @@ class DeviceMgrImp {
       auto member_id = action_prof_mgr->retrieve_member_id(member_h);
       if (member_id == nullptr) {
         Logger::get()->critical("Cannot map member handle to member id");
-        code = Code::UNKNOWN;
+        code = Code::INTERNAL;
         break;
       }
       member->set_member_id(*member_id);
@@ -1298,6 +1286,135 @@ class DeviceMgrImp {
   }
 
  private:
+  // internal version of read, which does not acquire an exclusive lock
+  Status read_(const p4::ReadRequest &request,
+               p4::ReadResponse *response) const {
+    Status status;
+    status.set_code(Code::OK);
+    for (const auto &entity : request.entities()) {
+      status = read_one_(entity, response);
+      if (status.code() != Code::OK) break;
+    }
+    return status;
+  }
+
+  // internal version of read_one, which does not acquire an exclusive lock
+  Status read_one_(const p4::Entity &entity, p4::ReadResponse *response) const {
+    Status status;
+    SessionTemp session(false  /* = batch */);
+    switch (entity.entity_case()) {
+      case p4::Entity::kTableEntry:
+        status = table_read(entity.table_entry(), session, response);
+        break;
+      case p4::Entity::kActionProfileMember:
+        status = action_profile_member_read(
+            entity.action_profile_member(), session, response);
+        break;
+      case p4::Entity::kActionProfileGroup:
+        status = action_profile_group_read(
+            entity.action_profile_group(), session, response);
+        break;
+      case p4::Entity::kMeterEntry:
+        status = meter_read(entity.meter_entry(), session, response);
+        break;
+      case p4::Entity::kDirectMeterEntry:
+        status = direct_meter_read(
+            entity.direct_meter_entry(), session, response);
+        break;
+      case p4::Entity::kCounterEntry:
+        status = counter_read(entity.counter_entry(), session, response);
+        break;
+      case p4::Entity::kDirectCounterEntry:
+        status = direct_counter_read(
+            entity.direct_counter_entry(), session, response);
+        break;
+      case p4::Entity::kPacketReplicationEngineEntry:
+        status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                              "Reading from PRE is not supported yet");
+        break;
+      case p4::Entity::kValueSetEntry:  // TODO(antonin)
+        status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                              "ValueSet reads are not supported yet");
+        break;
+      case p4::Entity::kRegisterEntry:
+        status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                              "Register reads are not supported yet");
+        break;
+      case p4::Entity::kDigestEntry:
+        status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                              "Digest config reads are not supported yet");
+        break;
+      default:
+        status = ERROR_STATUS(Code::UNKNOWN, "Incorrect entity type");
+        break;
+    }
+    return status;
+  }
+
+  // internal version of write, which does not acquire a shared lock
+  Status write_(const p4::WriteRequest &request) {
+    Status status;
+    status.set_code(Code::OK);
+    SessionTemp session(true  /* = batch */);
+    P4ErrorReporter error_reporter;
+    for (const auto &update : request.updates()) {
+      const auto &entity = update.entity();
+      switch (entity.entity_case()) {
+        case p4::Entity::kExternEntry:
+          Logger::get()->error("No extern support yet");
+          status.set_code(Code::UNIMPLEMENTED);
+          break;
+        case p4::Entity::kTableEntry:
+          status = table_write(update.type(), entity.table_entry(), session);
+          break;
+        case p4::Entity::kActionProfileMember:
+          status = action_profile_member_write(
+              update.type(), entity.action_profile_member(), session);
+          break;
+        case p4::Entity::kActionProfileGroup:
+          status = action_profile_group_write(
+              update.type(), entity.action_profile_group(), session);
+          break;
+        case p4::Entity::kMeterEntry:
+          status = meter_write(update.type(), entity.meter_entry(), session);
+          break;
+        case p4::Entity::kDirectMeterEntry:
+          status = direct_meter_write(
+              update.type(), entity.direct_meter_entry(), session);
+          break;
+        case p4::Entity::kCounterEntry:
+          status = counter_write(
+              update.type(), entity.counter_entry(), session);
+          break;
+        case p4::Entity::kDirectCounterEntry:
+          status = direct_counter_write(
+              update.type(), entity.direct_counter_entry(), session);
+          break;
+        case p4::Entity::kPacketReplicationEngineEntry:
+          status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                                "Writing to PRE is not supported yet");
+          break;
+        case p4::Entity::kValueSetEntry:  // TODO(antonin)
+          status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                                "ValueSet writes are not supported yet");
+          break;
+        case p4::Entity::kRegisterEntry:
+          status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                                "Register writes are not supported yet");
+          break;
+        case p4::Entity::kDigestEntry:
+          status = ERROR_STATUS(Code::UNIMPLEMENTED,
+                                "Digest config writes are not supported yet");
+          break;
+        default:
+          status = ERROR_STATUS(Code::UNKNOWN, "Incorrect entity type");
+          break;
+      }
+      error_reporter.push_back(status);
+    }
+    return error_reporter.get_status();
+  }
+
   p4_id_t pi_get_table_direct_resource_p4_id(pi_p4_id_t table_id,
     P4ResourceType resource_type) const {
     size_t num_direct_resources = 0;
@@ -1645,6 +1762,8 @@ class DeviceMgrImp {
         RETURN_ERROR_STATUS(Code::INVALID_ARGUMENT,
                             "Table has no direct meters");
       }
+      auto status = validate_meter_spec(table_entry.meter_config());
+      if (IS_ERROR(status)) return status;
       *meter_spec = meter_spec_proto_to_pi(
           table_entry.meter_config(), meter_id);
       action_entry->add_direct_res_config(meter_id, meter_spec);
@@ -1836,6 +1955,25 @@ class DeviceMgrImp {
     return pi_data;
   }
 
+  static Status validate_meter_spec(const p4::MeterConfig &config) {
+    // as per P4Runtime spec, -1 is a valid value and means that the packet is
+    // always marked "green"
+    if (config.cir() < 0 && config.cir() != -1)
+      RETURN_ERROR_STATUS(Code::INVALID_ARGUMENT, "Negative meter CIR");
+    if (config.cburst() < 0 && config.cburst() != -1)
+      RETURN_ERROR_STATUS(Code::INVALID_ARGUMENT, "Negative meter CBurst");
+    if (config.pir() < 0 && config.cir() != -1)
+      RETURN_ERROR_STATUS(Code::INVALID_ARGUMENT, "Negative meter PIR");
+    if (config.pburst() < 0 && config.pburst() != -1)
+      RETURN_ERROR_STATUS(Code::INVALID_ARGUMENT, "Negative meter PBurst");
+    auto max_burst = std::numeric_limits<uint32_t>::max();
+    if (config.cburst() > static_cast<decltype(config.cburst())>(max_burst))
+      RETURN_ERROR_STATUS(Code::UNIMPLEMENTED, "CBurst too large");
+    if (config.pburst() > static_cast<decltype(config.pburst())>(max_burst))
+      RETURN_ERROR_STATUS(Code::UNIMPLEMENTED, "Pburst too large");
+    RETURN_OK_STATUS();
+  }
+
   pi_meter_spec_t meter_spec_proto_to_pi(const p4::MeterConfig &config,
                                          pi_p4_id_t meter_id) const {
     pi_meter_spec_t pi_meter_spec;
@@ -1855,9 +1993,15 @@ class DeviceMgrImp {
   void meter_spec_pi_to_proto(const pi_meter_spec_t &pi_meter_spec,
                               p4::MeterConfig *config) const {
     config->set_cir(pi_meter_spec.cir);
-    config->set_cburst(pi_meter_spec.cburst);
+    if (pi_meter_spec.cburst == static_cast<decltype(pi_meter_spec.cburst)>(-1))
+      config->set_cburst(-1);
+    else
+      config->set_cburst(pi_meter_spec.cburst);
     config->set_pir(pi_meter_spec.pir);
-    config->set_pburst(pi_meter_spec.pburst);
+    if (pi_meter_spec.pburst == static_cast<decltype(pi_meter_spec.pburst)>(-1))
+      config->set_pburst(-1);
+    else
+      config->set_pburst(pi_meter_spec.pburst);
   }
 
   Status counter_read_one_index(const SessionTemp &session, uint32_t counter_id,
@@ -1895,6 +2039,50 @@ class DeviceMgrImp {
     RETURN_OK_STATUS();
   }
 
+  // Saves the existing forwarding state as one ReadResponse message; meant to
+  // be used for the RECONCILE_AND_COMMIT mode of SetForwardingPipeline.
+  // We assume that the exclusive lock has been acquired by the caller, which is
+  // why is call the internal version of read.
+  // The order of the read is important: to avoid dependency issues, we want to
+  // make sure that when the state is replayed we populate action profiles
+  // before match-action tables. This relies on our knowledge of the rest of the
+  // implementation, since we know that the read operations will be done in
+  // order.
+  Status save_forwarding_state(p4::ReadResponse *response) {
+    p4::ReadRequest request;
+    // setting the device id is not really necessary since DeviceMgr::Read does
+    // not check it (check is done by the server)
+    request.set_device_id(device_id);
+    {
+      auto *entity = request.add_entities();
+      entity->mutable_action_profile_member();
+    }
+    {
+      auto *entity = request.add_entities();
+      entity->mutable_action_profile_group();
+    }
+    {
+      auto *entity = request.add_entities();
+      entity->mutable_table_entry();
+    }
+    {
+      auto *entity = request.add_entities();
+      entity->mutable_meter_entry();
+    }
+    {
+      auto *entity = request.add_entities();
+      entity->mutable_counter_entry();
+    }
+    return read_(request, response);
+  }
+
+  using SharedMutex = boost::shared_mutex;
+  using SharedLock = boost::shared_lock<SharedMutex>;
+  using UniqueLock = boost::unique_lock<SharedMutex>;
+
+  SharedLock shared_lock() const { return SharedLock(shared_mutex); }
+  UniqueLock unique_lock() const { return UniqueLock(shared_mutex); }
+
   device_id_t device_id;
   // for now, we assume all possible pipes of device are programmed in the same
   // way
@@ -1909,6 +2097,8 @@ class DeviceMgrImp {
   action_profs{};
 
   TableInfoStore table_info_store;
+
+  mutable SharedMutex shared_mutex{};
 };
 
 DeviceMgr::DeviceMgr(device_id_t device_id) {

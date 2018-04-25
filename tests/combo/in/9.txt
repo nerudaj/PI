@@ -1,0 +1,5 @@
+assign_device 0 0
+table_set_default ipv4_lpm set_nhop 0.0.0.0 1
+table_reset_default ipv4_lpm
+table_set_default ipv4_lpm set_nhop 0.0.0.0 1
+quit

@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -42,6 +43,30 @@ extern conn_mgr_t *conn_mgr_state;
 }  // namespace pibmv2
 
 namespace {
+
+// We check which of pi_priority_t (PI type) and int32_t (bmv2 Thrift type) can
+// fit the largest unsigned integer. If it is priority_t, BM_MAX_PRIORITY is set
+// to the max value for an int32_t. If it is int32_t, BM_MAX_PRIORITY is set to
+// the max value for a priority_t. BM_MAX_PRIORITY is then used as a pivot to
+// invert priority values passed by PI.
+static constexpr pi_priority_t BM_MAX_PRIORITY =
+    (static_cast<uintmax_t>(std::numeric_limits<pi_priority_t>::max()) >=
+     static_cast<uintmax_t>(std::numeric_limits<int32_t>::max())) ?
+    static_cast<pi_priority_t>(std::numeric_limits<int32_t>::max()) :
+    std::numeric_limits<pi_priority_t>::max();
+
+class PriorityInverter {
+ public:
+  PriorityInverter() = delete;
+  static int32_t pi_to_bm(pi_priority_t from) {
+    assert(from <= BM_MAX_PRIORITY);
+    return BM_MAX_PRIORITY - from;
+  }
+  static pi_priority_t bm_to_pi(int32_t from) {
+    assert(from >= 0 && static_cast<uintmax_t>(from) <= BM_MAX_PRIORITY);
+    return BM_MAX_PRIORITY - static_cast<pi_priority_t>(from);
+  }
+};
 
 std::vector<BmMatchParam> build_key(pi_p4_id_t table_id,
                                     const pi_match_key_t *match_key,
@@ -131,7 +156,8 @@ void build_key_and_options(pi_p4_id_t table_id,
                            BmMatchParams *mkey, BmAddEntryOptions *options) {
   bool requires_priority = false;
   *mkey = build_key(table_id, match_key, p4info, &requires_priority);
-  if (requires_priority) options->__set_priority(match_key->priority);
+  if (requires_priority)
+    options->__set_priority(PriorityInverter::pi_to_bm(match_key->priority));
 }
 
 
@@ -310,6 +336,8 @@ pi_status_t retrieve_entry_wkey(pi_dev_id_t dev_id, pi_p4_id_t table_id,
   assert(d_info->assigned);
   const pi_p4info_t *p4info = d_info->p4info;
 
+  if (match_key->priority > BM_MAX_PRIORITY)
+    return PI_STATUS_UNSUPPORTED_ENTRY_PRIORITY;
   BmMatchParams mkey;
   BmAddEntryOptions options;
   build_key_and_options(table_id, match_key, p4info, &mkey, &options);
@@ -349,6 +377,8 @@ pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle,
   assert(d_info->assigned);
   const pi_p4info_t *p4info = d_info->p4info;
 
+  if (match_key->priority > BM_MAX_PRIORITY)
+    return PI_STATUS_UNSUPPORTED_ENTRY_PRIORITY;
   BmMatchParams mkey;
   BmAddEntryOptions options;
   build_key_and_options(table_id, match_key, p4info, &mkey, &options);
@@ -639,6 +669,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle,
   data_size += entries.size() * sizeof(s_pi_action_entry_type_t);
   data_size += entries.size() * sizeof(uint32_t);  // for priority
   data_size += entries.size() * sizeof(uint32_t);  // for properties
+  data_size += entries.size() * sizeof(uint32_t);  // for direct resources
 
   res->mkey_nbytes = pi_p4info_table_match_key_size(p4info, table_id);
   data_size += entries.size() * res->mkey_nbytes;
@@ -673,8 +704,13 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle,
   for (const auto &e : entries) {
     data += emit_entry_handle(data, e.entry_handle);
     const auto &options = e.options;
-    if (options.__isset.priority) {
-      data += emit_uint32(data, options.priority);
+    // TODO(antonin): temporary hack; for match types which do not require a
+    // priority, bmv2 actually returns -1 instead of not setting the field, but
+    // the PI tends to expect 0, which is a problem for looking up entry state
+    // in the PI software. A more robust solution may be to ignore this value in
+    // the PI based on the key match type.
+    if (options.__isset.priority && options.priority != -1) {
+      data += emit_uint32(data, PriorityInverter::bm_to_pi(options.priority));
     } else {
       data += emit_uint32(data, 0);
     }
@@ -743,7 +779,8 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle,
         break;
     }
 
-    data += emit_uint32(data, 0);
+    data += emit_uint32(data, 0);  // properties
+    data += emit_uint32(data, 0);  // TODO(antonin): direct resources
   }
 
   return PI_STATUS_SUCCESS;
