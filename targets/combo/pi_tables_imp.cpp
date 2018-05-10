@@ -505,10 +505,10 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
-	res->p4info = info;
-	res->num_direct_resources = res->num_entries;
 	res->num_entries = table->getSize();
 	size_t dataSize = 0U;
+	res->p4info = info;
+	res->num_direct_resources = res->num_entries;
 
 	dataSize += res->num_entries * sizeof(s_pi_entry_handle_t);
 	dataSize += res->num_entries * sizeof(s_pi_action_entry_type_t);
@@ -575,8 +575,6 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 		// Our actions are always direct
 		data += emit_action_entry_type(data, PI_ACTION_ENTRY_TYPE_DATA);
 		auto actionProperties = actionMap.at(rule->action);
-
-		std::cerr << actionProperties.id << " " << actionProperties.size << "\n";
 
 		data += emit_p4_id(data, actionProperties.id);
 		data += emit_uint32(data, actionProperties.size);
