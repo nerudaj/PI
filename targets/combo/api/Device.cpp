@@ -26,6 +26,11 @@ uint32_t Device::initialize(char *name) {
 		return status;
 	}
 	
+	if ((status = registers.initialize(&info)) != P4DEV_OK) {
+		deinitialize();
+		return status;
+	}
+	
 	char **tableNames;
 	uint32_t nameCount;
 	if ((status = p4dev_get_table_names(&info, &tableNames, &nameCount)) != P4DEV_OK) {
