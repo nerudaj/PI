@@ -64,6 +64,7 @@ void Device::deinitialize() {
 	if (info.dt != NULL) {
 		tables.clear();
 		p4dev_free(&info);
+		info.dt = NULL;
 	}
 }
 
