@@ -70,6 +70,14 @@ uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match
 			if (value == NULL) return P4DEV_ALLOCATE_ERROR;
 			memcpy(value, data, bytewidth);
 			data += bytewidth;
+			
+			/* NOTE:
+				P4 Runtime treats data as-is, meaning that IPv4 written as
+				1.2.3.4 will be saved in uint8_t array as [1,2,3,4]. But
+				lip4dev expects data to be ordered as [4,3,2,1]. That is
+				why we have to flip the endianness.
+			 */
+			flipEndianness(value, bytewidth);
 
 			if (last == NULL) {
 				(*key) = cuckoo_p4key_create(keyName, bytewidth, value);
@@ -87,6 +95,7 @@ uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match
 			memcpy(value, data, bytewidth);
 			data += bytewidth;
 			data += retrieve_uint32(data, &prefixLen);
+			flipEndianness(value, bytewidth);
 
 			if (last == NULL) {
 				(*key) = bstlpm_p4key_create(keyName, bytewidth, value, prefixLen);
@@ -106,8 +115,10 @@ uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match
 
 			memcpy(value, data, bytewidth);
 			data += bytewidth;
+			flipEndianness(value, bytewidth);
 			memcpy(mask, data, bytewidth);
 			data += bytewidth;
+			flipEndianness(mask, bytewidth);
 
 			if (last == NULL) {
 				(*key) = tcam_p4key_create(keyName, bytewidth, value, mask);
@@ -164,6 +175,7 @@ uint32_t createParams(const pi_p4info_t *info, const pi_p4_id_t actionID, const 
 		if (data == NULL) return P4DEV_ALLOCATE_ERROR;
 
 		memcpy(data, actionData, paramBytewidth);
+		flipEndianness(data, paramBytewidth); // Everything that is a byte array has to be flipped
 		const char *paramName = pi_p4info_action_param_name_from_id(info, actionID, paramIds[i]);
 
 		if (*param == NULL) {
@@ -551,19 +563,28 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 
 			switch (rule->engine) {
 			case P4ENGINE_TCAM: // ternary
+				/* NOTE:
+					The endianness was flipped when the rule
+					was written into the device, now we have
+					to flip it back.
+				 */
+				flipEndianness(key->value, key->val_size);
 				std::memcpy(data, key->value, key->val_size);
 				data += key->val_size;
+				flipEndianness(key->opt.mask, key->val_size);
 				std::memcpy(data, key->opt.mask, key->val_size);
 				data += key->val_size;
 				break;
 
 			case P4ENGINE_LPM:
+				flipEndianness(key->value, key->val_size);
 				std::memcpy(data, key->value, key->val_size);
 				data += key->val_size;
 				data += emit_uint32(data, key->opt.prefix_len);
 				break;
 
 			case P4ENGINE_CUCKOO: //Exact
+				flipEndianness(key->value, key->val_size);
 				std::memcpy(data, key->value, key->val_size);
 				data += key->val_size;
 				break;

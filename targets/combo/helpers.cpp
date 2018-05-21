@@ -26,6 +26,8 @@ char *dumpActionData(const pi_p4info_t *info, char *data, pi_p4_id_t actionId, c
 
 		assert(bytewidth >= param->val_size);
 
+		flipEndianness(param->value, param->val_size); // Flip everything that is uint8_t array on I/O communication with libp4dev
+		
 		size_t offset = bytewidth - param->val_size;
 		std::memset(data, 0, offset);
 		std::memcpy(data + offset, param->value, param->val_size);
