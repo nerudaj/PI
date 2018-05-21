@@ -73,3 +73,9 @@ std::unordered_map<std::string, ActionProperties> computeActionSizes(const pi_p4
 
 	return result;
 }
+
+void flipEndianness(uint8_t *data, size_t dataSize) {
+	for (unsigned i = 0; i < dataSize / 2; i++) {
+		std::swap(data[i], data[dataSize - 1 - i]);
+	}
+}

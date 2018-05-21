@@ -52,4 +52,14 @@ struct ActionProperties {
  */
 std::unordered_map<std::string, ActionProperties> computeActionSizes(const pi_p4info_t *info, const pi_p4_id_t *action_ids, size_t num_actions);
 
+/**
+ *  \brief Swap endianness of a uint8_t array
+ *  
+ *  \param [in] data Array of bytes
+ *  \param [in] dataSize Byte count
+ *  
+ *  \details Each nth byte is swapped with (dataSize - 1 - n)th byte.
+ */
+void flipEndianness(uint8_t *data, size_t dataSize);
+
 #endif
