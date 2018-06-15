@@ -1,26 +1,26 @@
 === RULES DUMP ===
 Rule for table: ipv4_lpm
 	Engine: LPM
-	MatchKey: ipv4.dstAddr(10.0.0.1/24)
+	MatchKey: ipv4.dstAddr(1.0.0.10/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10001)->port(01)
+	Params: nhop_ipv4(10010)->port(10)
 
 === RULES DUMP ===
 Rule for table: ipv4_lpm
 	Engine: LPM
-	MatchKey: ipv4.dstAddr(10.0.0.1/24)
+	MatchKey: ipv4.dstAddr(1.0.0.10/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10001)->port(01)
+	Params: nhop_ipv4(10010)->port(10)
 Rule for table: ipv4_lpm
 	Engine: LPM
-	MatchKey: ipv4.dstAddr(69.0.0.1/24)
+	MatchKey: ipv4.dstAddr(1.0.0.69/24)
 	Action: set_nhop
-	Params: nhop_ipv4(69001)->port(01)
+	Params: nhop_ipv4(10069)->port(10)
 
 === RULES DUMP ===
 Rule for table: ipv4_lpm
 	Engine: LPM
-	MatchKey: ipv4.dstAddr(69.0.0.1/24)
+	MatchKey: ipv4.dstAddr(1.0.0.69/24)
 	Action: set_nhop
-	Params: nhop_ipv4(69001)->port(01)
+	Params: nhop_ipv4(10069)->port(10)
 

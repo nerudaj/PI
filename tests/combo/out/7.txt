@@ -1,13 +1,13 @@
 === RULES DUMP ===
 Rule for table: ipv4_lpm
 	Engine: LPM
-	MatchKey: ipv4.dstAddr(10.0.0.1/24)
+	MatchKey: ipv4.dstAddr(1.0.0.10/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10001)->port(01)
+	Params: nhop_ipv4(10010)->port(10)
 
 === RULES DUMP ===
 Rule for table: forward
 	Engine: EXACT
-	MatchKey: routing_metadata.nhop_ipv4(10666)
+	MatchKey: routing_metadata.nhop_ipv4(66610)
 	Action: _drop
 
