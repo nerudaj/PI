@@ -7,7 +7,7 @@
 #include <ciso646>
 #include "api/P4Dev.hpp"
 
-typedef std::vector<p4::Device> DeviceArray;
+typedef std::vector<p4device_t> DeviceArray;
 typedef std::vector<const pi_p4info_t*> DeviceInfo;
 
 extern DeviceArray devices; ///< Used device database. Index with indices obtained from p4::DeviceAlloc
