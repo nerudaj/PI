@@ -24,6 +24,7 @@
 #include <PI/pi.h>
 
 #include <iostream>
+#include <cstring>
 #include "devices.hpp"
 #include "helpers.hpp"
 #include "logger.hpp"
@@ -359,7 +360,7 @@ pi_status_t _pi_table_default_action_get(pi_session_handle_t session_handle, pi_
 //! memory to be released.
 pi_status_t _pi_table_default_action_done(pi_session_handle_t session_handle, pi_table_entry_t *table_entry) {
 	(void) session_handle;
-	Logger::debug("PI_table_default_action_done")
+	Logger::debug("PI_table_default_action_done");
 
 	if (table_entry->entry_type == PI_ACTION_ENTRY_TYPE_DATA) {
 		pi_action_data_t *action_data = table_entry->entry.action_data;
@@ -406,7 +407,7 @@ pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_d
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4table_t *table = p4table_get_default_rule(&(devices[dev_id]), tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_id]), tableName);
 	if (table == NULL) {
 		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
@@ -419,7 +420,7 @@ pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_d
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 
-	status = p4table_find_rule(table, key, index);
+	status = p4table_find_rule(table, key, &index);
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
@@ -536,7 +537,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
-	res->num_entries = table->getSize();
+	res->num_entries = p4table_get_size(table);
 	size_t dataSize = 0U;
 	res->p4info = info;
 	res->num_direct_resources = res->num_entries;
