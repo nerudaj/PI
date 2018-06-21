@@ -7,6 +7,7 @@
 #include <PI/p4info.h>
 #include <PI/pi.h>
 #include <unordered_map>
+#include <cstring>
 
 /**
  *  \brief Convert PI match engine enumeration into libp4dev match engine enumeration

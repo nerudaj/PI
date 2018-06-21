@@ -22,8 +22,7 @@
 #include <PI/int/serialize.h>
 #include <PI/p4info.h>
 #include <PI/pi.h>
-
-#include <iostream>
+#include <p4dev.h>
 #include <cstring>
 #include "devices.hpp"
 #include "helpers.hpp"
@@ -496,7 +495,7 @@ pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_d
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 
-	status = p4table_find_rule(table, key, index);
+	status = p4table_find_rule(table, key, &index);
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);

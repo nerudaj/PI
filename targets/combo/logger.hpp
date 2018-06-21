@@ -3,6 +3,9 @@
 
 #define ENABLE_DEBUG
 
+#include <iostream>
+#include <cstring>
+
 class Logger {
 public:
 	static void debug(const std::string &str) {

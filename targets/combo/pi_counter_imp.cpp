@@ -21,8 +21,7 @@
 #include <PI/p4info.h>
 #include <PI/pi.h>
 #include <PI/target/pi_counter_imp.h>
-
-#include <iostream>
+#include <p4dev.h>
 #include "devices.hpp"
 #include "helpers.hpp"
 

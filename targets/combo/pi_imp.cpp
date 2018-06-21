@@ -21,8 +21,7 @@
 #include <PI/pi.h>
 #include <PI/target/pi_imp.h>
 #include <iostream>
-
-#include "api/P4Dev.hpp"
+#include <p4dev.h>
 #include "devices.hpp"
 #include "logger.hpp"
 

@@ -5,7 +5,7 @@
 #include <PI/target/pi_imp.h>
 #include <vector>
 #include <ciso646>
-#include "api/P4Dev.hpp"
+#include <p4dev.h>
 
 typedef std::vector<p4device_t> DeviceArray;
 typedef std::vector<const pi_p4info_t*> DeviceInfo;
