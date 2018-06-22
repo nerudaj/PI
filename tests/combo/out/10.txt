@@ -3,29 +3,29 @@ Rule for table: ipv4_lpm
 	Engine: LPM
 	MatchKey: ipv4.dstAddr(1.0.0.10/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10010)->port(10)
+	Params: nhop_ipv4(0x1 0x0 0x0 0xa)->port(0x1 0x0)
 
 === RULES DUMP ===
 Rule for table: ipv4_lpm
 	Engine: LPM
 	MatchKey: ipv4.dstAddr(1.0.0.10/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10010)->port(10)
+	Params: nhop_ipv4(0x1 0x0 0x0 0xa)->port(0x1 0x0)
 Rule for table: ipv4_lpm
 	Engine: LPM
 	MatchKey: ipv4.dstAddr(1.0.0.69/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10069)->port(660)
+	Params: nhop_ipv4(0x1 0x0 0x0 0x45)->port(0x2a 0x0)
 
 === RULES DUMP ===
 Rule for table: ipv4_lpm
 	Engine: LPM
 	MatchKey: ipv4.dstAddr(1.0.0.10/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10010)->port(10)
+	Params: nhop_ipv4(0x1 0x0 0x0 0xa)->port(0x1 0x0)
 Rule for table: ipv4_lpm
 	Engine: LPM
 	MatchKey: ipv4.dstAddr(1.0.0.69/24)
 	Action: set_nhop
-	Params: nhop_ipv4(11111111)->port(10)
+	Params: nhop_ipv4(0xb 0xb 0xb 0xb)->port(0x1 0x0)
 

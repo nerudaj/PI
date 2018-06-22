@@ -18,21 +18,6 @@ COLOR_YELLOW='\e[1;33m'
 COLOR_GRAY='\e[0;30m'
 COLOR_LIGHT_GRAY='\e[0;37m'
 
-echo "Building testing backend"
-
-cd targets/combo/dummy
-make clean
-if make; then
-	make install-local
-	cd ../../..
-else
-	cd ../../..
-	echo -e $COLOR_LIGHT_RED "[BUILD FAILED] - Dummy API" $COLOR_NC
-	exit 1
-fi
-
-clear
-
 echo "Building application"
 make clean
 if make -j 24; then
@@ -48,11 +33,11 @@ labels=("Assign device (0)" "Add LPM rule" "Add 2 LPM rules" "Add exact rule" "A
 
 for i in {1..14}
 do
-	rm -f log.txt
+	rm -f /tmp/libp4dev.log
 	echo "Test" $i "-" ${labels[$i-1]}
 	
 	if ./pi_CLI_combo -c ../tests/combo/info.json >$i.out 2>&1 <../tests/combo/in/$i.txt; then
-		if diff -N log.txt ../tests/combo/out/$i.txt >$i.diff 2>&1; then
+		if diff -N /tmp/libp4dev.log ../tests/combo/out/$i.txt >$i.diff 2>&1; then
 			echo -e $COLOR_LIGHT_GREEN "[OK]" $COLOR_NC
 			rm -f $i.diff $i.out log.txt
 		else

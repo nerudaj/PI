@@ -3,5 +3,5 @@ Rule for table: ipv4_lpm
 	Engine: LPM
 	MatchKey: ipv4.dstAddr(1.0.0.10/24)
 	Action: set_nhop
-	Params: nhop_ipv4(10010)->port(10)
+	Params: nhop_ipv4(0x1 0x0 0x0 0xa)->port(0x1 0x0)
 
