@@ -15,7 +15,7 @@ Rule for table: ipv4_lpm
 	Engine: LPM
 	MatchKey: ipv4.dstAddr(1.0.0.69/24)
 	Action: set_nhop
-	Params: nhop_ipv4(0x1 0x0 0x0 0x45)->port(0x2a 0x0)
+	Params: nhop_ipv4(0x1 0x0 0x0 0x45)->port(0x42 0x0)
 
 === RULES DUMP ===
 Rule for table: ipv4_lpm
