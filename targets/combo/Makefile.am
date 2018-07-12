@@ -11,7 +11,8 @@ pi_act_prof_imp.cpp \
 pi_counter_imp.cpp \
 pi_meter_imp.cpp \
 pi_learn_imp.cpp \
+pi_mc_imp.cpp \
 devices.cpp \
-helpers.cpp
+helpers.cpp 
 
 lib_LTLIBRARIES = libpi_combo.la
