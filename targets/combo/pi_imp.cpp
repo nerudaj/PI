@@ -46,7 +46,14 @@ pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_
 	}
 	
 	// Initialize device
-	uint32_t status = p4device_init(&(devices[dev_id]), NULL, dev_id);
+	uint32_t status = p4device_init(&(devices[dev_id]), NULL, dev_id, P4DEVICE_DEFAULT_COMPONENT);
+	if (status != P4DEV_OK) {
+		p4dev_err_stderr(status);
+		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
+	}
+	
+	// Reset device
+	uint32_t status = p4device_reset(&(devices[dev_id]));
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
