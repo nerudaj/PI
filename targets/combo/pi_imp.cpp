@@ -53,7 +53,7 @@ pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_
 	}
 	
 	// Reset device
-	uint32_t status = p4device_reset(&(devices[dev_id]));
+	status = p4device_reset(&(devices[dev_id]));
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
