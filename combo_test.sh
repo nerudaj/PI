@@ -65,12 +65,12 @@ do
 		else
 			echo -e $COLOR_LIGHT_RED "[FAILED] - Diff failed" $COLOR_NC
 			echo "[FAILED] - Diff failed" >>$ALTLOG
-			$ret=1
+			ret=1
 		fi
 	else
 		echo -e $COLOR_LIGHT_RED "[FAILED] - Program failed" $COLOR_NC
 		echo "[FAILED] - Program failed" >>$ALTLOG
-		$ret=1
+		ret=1
 	fi
 done
 
