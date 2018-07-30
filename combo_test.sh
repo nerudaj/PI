@@ -34,6 +34,20 @@ fi
 
 clear
 
+# Build fake design
+echo "Building fake design"
+echo "Building fake design" >>$ALTLOG
+if dtc -I dts -O dtb tests/combo/device_tree.dts -o /tmp/dummy0.dtb; then
+	echo -e $COLOR_LIGHT_GREEN "[OK]" $COLOR_NC
+	echo "[OK]" >>$ALTLOG
+else
+	echo -e $COLOR_LIGHT_RED "[FAILED]" $COLOR_NC
+	echo "[FAILED]" >>$ALTLOG
+	exit 1
+fi
+
+clear
+
 labels=("Assign device (0)" "Add LPM rule" "Add 2 LPM rules" "Add exact rule" "Add two same rules" "Overfill table capacity" "Add rules to multiple tables" "Set default rule" "Set/unset/set default rule" "Modify rule with handle" "Modify rule with key" "Delete rule with handle" "Delete rule with key" "Delete with with handle (multiple rules)")
 
 ret=0
