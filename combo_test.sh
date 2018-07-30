@@ -21,19 +21,6 @@ COLOR_LIGHT_GRAY='\e[0;37m'
 ALTLOG=/tmp/pi_testing.log
 rm -f $ALTLOG
 
-echo "Building application"
-echo "Building application" >>$ALTLOG
-make clean
-if make -j 24; then
-	cd CLI
-else
-	echo -e $COLOR_LIGHT_RED "[BUILD FAILED] - App" $COLOR_NC
-	echo "[BUILD FAILED] - App" >>$ALTLOG
-	exit 1
-fi
-
-clear
-
 # Build fake design
 echo "Building fake design"
 echo "Building fake design" >>$ALTLOG
@@ -43,6 +30,19 @@ if dtc -I dts -O dtb tests/combo/device_tree.dts -o /tmp/dummy0.dtb; then
 else
 	echo -e $COLOR_LIGHT_RED "[FAILED]" $COLOR_NC
 	echo "[FAILED]" >>$ALTLOG
+	exit 1
+fi
+
+clear
+
+echo "Building application"
+echo "Building application" >>$ALTLOG
+make clean
+if make -j 24; then
+	cd CLI
+else
+	echo -e $COLOR_LIGHT_RED "[BUILD FAILED] - App" $COLOR_NC
+	echo "[BUILD FAILED] - App" >>$ALTLOG
 	exit 1
 fi
 
