@@ -32,6 +32,13 @@ AC_ARG_WITH([bmv2],
 
 AM_CONDITIONAL([WITH_BMV2], [test "$want_bmv2" = yes])
 
+want_combo=no
+AC_ARG_WITH([combo],
+	AS_HELP_STRING([--with-combo], [Build for combo target]),
+	[want_combo="$withval"], [])
+
+AM_CONDITIONAL([WITH_COMBO], [test "$with_combo" = yes])
+
 want_fe_cpp=no
 AC_ARG_WITH([fe_cpp],
     AS_HELP_STRING([--with-fe-cpp], [Build with C++ frontend]),
