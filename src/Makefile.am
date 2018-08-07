@@ -25,7 +25,9 @@ p4info/p4info_name_map.h \
 p4info/p4info_name_map.c \
 p4info/p4info_common.h \
 p4info/p4info_common.c \
-p4info_int.h
+p4info_int.h \
+p4info/fast_id_vector.h \
+p4info/fast_id_vector.c
 
 libpip4info_la_LIBADD = \
 $(top_builddir)/third_party/cJSON/libpicjson.la \
@@ -40,6 +42,7 @@ pi_counter.c \
 pi_meter.c \
 pi_learn.c \
 pi_value.c \
+pi_mc.c \
 device_map.c \
 device_map.h
 

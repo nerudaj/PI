@@ -21,8 +21,7 @@
 #include <PI/pi.h>
 #include <PI/target/pi_imp.h>
 #include <iostream>
-
-#include "api/P4Dev.hpp"
+#include <p4dev.h>
 #include "devices.hpp"
 #include "logger.hpp"
 
@@ -38,6 +37,7 @@ pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_
 	(void)extra;
 	Logger::debug("PI_assign_device - " + std::to_string(dev_id));
 	
+	// Try to reserve device
 	if (dev_id > DeviceManager::getDeviceCount()) {
 		return PI_STATUS_DEV_OUT_OF_RANGE;
 	}
@@ -45,20 +45,15 @@ pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_
 		return PI_STATUS_DEV_ALREADY_ASSIGNED;
 	}
 	
-	uint32_t deviceNameLength = 128;
-	char *deviceName = new char[deviceNameLength];
-	if (deviceName == NULL) {
-		p4dev_err_stderr(P4DEV_ALLOCATE_ERROR);
-		return pi_status_t(PI_STATUS_TARGET_ERROR + P4DEV_ALLOCATE_ERROR);
-	}
-	
-	uint32_t status = p4dev_get_device_path(deviceName, deviceNameLength, dev_id);
+	// Initialize device
+	uint32_t status = p4device_init(&(devices[dev_id]), NULL, dev_id, P4DEVICE_DEFAULT_COMPONENT);
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 	
-	status = devices[dev_id].initialize(deviceName);
+	// Reset device
+	status = p4device_reset(&(devices[dev_id]));
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
@@ -78,7 +73,7 @@ pi_status_t _pi_update_device_start(pi_dev_id_t dev_id, const pi_p4info_t *p4inf
 		return PI_STATUS_DEV_OUT_OF_RANGE;
 	}
 
-	std::cout << "\tIgnoring new device datay\n";
+	Logger::debug("Ignoring new device data\n");
 
 	infos[dev_id] = p4info;
 
@@ -98,7 +93,6 @@ pi_status_t _pi_remove_device(pi_dev_id_t dev_id) {
 		return PI_STATUS_DEV_OUT_OF_RANGE;
 	}
 	
-	devices[dev_id].deinitialize();
 	DeviceManager::freeDevice(dev_id);
 	
 	return PI_STATUS_SUCCESS;

@@ -44,12 +44,15 @@
 #include "PI/pi.h"
 #include "PI/proto/util.h"
 
-#include "p4info_to_and_from_proto.h"
+#include "PI/proto/p4info_to_and_from_proto.h"
 
 #include "google/rpc/code.pb.h"
 
 #include "matchers.h"
 #include "mock_switch.h"
+
+namespace p4v1 = ::p4::v1;
+namespace p4configv1 = ::p4::config::v1;
 
 // Needs to be in same namespace as google::rpc::Status for ADL
 namespace google {
@@ -58,7 +61,7 @@ std::ostream &operator<<(std::ostream &out, const Status &status) {
   out << "Status(code=" << status.code() << ", message='" << status.message()
       << "', details=";
   for (const auto &error_any : status.details()) {
-    p4::Error error;
+    p4v1::Error error;
     if (!error_any.UnpackTo(&error)) {
       out << "INVALID + ";
     } else {
@@ -84,11 +87,13 @@ using google::protobuf::util::MessageDifferencer;
 
 using ::testing::_;
 using ::testing::AnyNumber;
+using ::testing::Args;
 using ::testing::AtLeast;
+using ::testing::ElementsAre;
 
 // Used to make sure that a google::rpc::Status object has the correct format
-// and contains a single p4::Error message with a matching canonical error code
-// and message. The test writer can simply write the following:
+// and contains a single p4v1::Error message with a matching canonical error
+// code and message. The test writer can simply write the following:
 // EXPECT_EQ(returned_status, OneExpectedError(expected_code [, expected_msg]));
 struct OneExpectedError {
   OneExpectedError(Code code, const char *msg)
@@ -108,7 +113,7 @@ bool operator==(const DeviceMgr::Status &status,
   if (status.code() != Code::UNKNOWN) return false;
   if (status.details().size() != 1) return false;
   const auto &error_any = status.details().Get(0);
-  p4::Error error;
+  p4v1::Error error;
   if (!error_any.UnpackTo(&error)) return false;
   if (error.canonical_code() != expected.code) return false;
   if (!expected.msg.empty() && (expected.msg != error.message())) return false;
@@ -130,7 +135,7 @@ std::ostream &operator<<(std::ostream &out, const OneExpectedError &error) {
 
 // Used to make sure that a google::rpc::Status object has the correct format
 // and contains the correct error codes in the details field, which is a
-// repeated field of p4::Error messages (as Any messages).
+// repeated field of p4v1::Error messages (as Any messages).
 struct ExpectedErrors {
   void push_back(Code code) {
     expected_codes.push_back(code);
@@ -153,7 +158,7 @@ bool operator==(const DeviceMgr::Status &status,
     return false;
   for (size_t i = 0; i < expected_errors.size(); i++) {
     const auto &error_any = status.details().Get(i);
-    p4::Error error;
+    p4v1::Error error;
     if (!error_any.UnpackTo(&error)) return false;
     if (error.canonical_code() != expected_errors.at(i)) return false;
   }
@@ -190,10 +195,10 @@ class DeviceMgrTest : public ::testing::Test {
   }
 
   void SetUp() override {
-    p4::ForwardingPipelineConfig config;
+    p4v1::ForwardingPipelineConfig config;
     config.set_allocated_p4info(&p4info_proto);
     auto status = mgr.pipeline_config_set(
-        p4::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT,
+        p4v1::SetForwardingPipelineConfigRequest_Action_VERIFY_AND_COMMIT,
         config);
     // releasing resource before the assert to avoid double free in case the
     // assert is false
@@ -203,10 +208,10 @@ class DeviceMgrTest : public ::testing::Test {
 
   void TearDown() override { }
 
-  DeviceMgr::Status add_entry(p4::TableEntry *entry) {
-    p4::WriteRequest request;
+  DeviceMgr::Status add_entry(p4v1::TableEntry *entry) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_INSERT);
+    update->set_type(p4v1::Update_Type_INSERT);
     auto entity = update->mutable_entity();
     entity->set_allocated_table_entry(entry);
     auto status = mgr.write(request);
@@ -215,16 +220,16 @@ class DeviceMgrTest : public ::testing::Test {
   }
 
   DeviceMgr::Status read_table_entries(pi_p4_id_t t_id,
-                                       p4::ReadResponse *response) {
-    p4::Entity entity;
+                                       p4v1::ReadResponse *response) {
+    p4v1::Entity entity;
     auto table_entry = entity.mutable_table_entry();
     table_entry->set_table_id(t_id);
     return mgr.read_one(entity, response);
   }
 
-  DeviceMgr::Status read_table_entry(p4::TableEntry *table_entry,
-                                     p4::ReadResponse *response) {
-    p4::Entity entity;
+  DeviceMgr::Status read_table_entry(p4v1::TableEntry *table_entry,
+                                     p4v1::ReadResponse *response) {
+    p4v1::Entity entity;
     entity.set_allocated_table_entry(table_entry);
     auto status = mgr.read_one(entity, response);
     entity.release_table_entry();
@@ -234,7 +239,7 @@ class DeviceMgrTest : public ::testing::Test {
   static constexpr const char *input_path =
            TESTDATADIR "/" "unittest.p4info.txt";
   static pi_p4info_t *p4info;
-  static p4::config::P4Info p4info_proto;
+  static p4configv1::P4Info p4info_proto;
   static constexpr const char *invalid_p4_id_error_str = "Invalid P4 id";
 
   DummySwitchWrapper wrapper{};
@@ -244,11 +249,11 @@ class DeviceMgrTest : public ::testing::Test {
 };
 
 pi_p4info_t *DeviceMgrTest::p4info = nullptr;
-p4::config::P4Info DeviceMgrTest::p4info_proto;
+p4configv1::P4Info DeviceMgrTest::p4info_proto;
 constexpr const char *DeviceMgrTest::invalid_p4_id_error_str;
 
 TEST_F(DeviceMgrTest, ResourceTypeFromId) {
-  using Type = p4::config::P4Ids;
+  using Type = p4configv1::P4Ids;
   using pi::proto::util::resource_type_from_id;
   auto a_id = pi_p4info_action_id_from_name(p4info, "actionA");
   ASSERT_EQ(Type::ACTION, resource_type_from_id(a_id));
@@ -269,7 +274,7 @@ TEST_F(DeviceMgrTest, ResourceTypeFromId) {
 }
 
 TEST_F(DeviceMgrTest, PipelineConfigGet) {
-  p4::ForwardingPipelineConfig config;
+  p4v1::ForwardingPipelineConfig config;
   auto status = mgr.pipeline_config_get(&config);
   ASSERT_EQ(status.code(), Code::OK);
   EXPECT_TRUE(MessageDifferencer::Equals(p4info_proto, config.p4info()));
@@ -320,8 +325,8 @@ class MatchKeyInput {
     return mk;
   }
 
-  p4::FieldMatch get_proto(pi_p4_id_t f_id) const {
-    p4::FieldMatch fm;
+  p4v1::FieldMatch get_proto(pi_p4_id_t f_id) const {
+    p4v1::FieldMatch fm;
     fm.set_field_id(f_id);
     switch (type) {
       case Type::EXACT:
@@ -379,6 +384,8 @@ class MatchKeyInput {
   int priority;
 };
 
+#define PRIORITY 77
+
 class MatchTableTest
     : public DeviceMgrTest,
       public WithParamInterface<std::tuple<const char *, MatchKeyInput> > {
@@ -390,16 +397,17 @@ class MatchTableTest
     a_id = pi_p4info_action_id_from_name(p4info, "actionA");
   }
 
-  p4::TableEntry generic_make(pi_p4_id_t t_id,
-                              boost::optional<p4::FieldMatch> mf,
-                              const std::string &param_v,
-                              int priority = 0,
-                              uint64_t controller_metadata = 0);
+  p4v1::TableEntry generic_make(pi_p4_id_t t_id,
+                                boost::optional<p4v1::FieldMatch> mf,
+                                const std::string &param_v,
+                                int priority = 0,
+                                uint64_t controller_metadata = 0);
 
-  DeviceMgr::Status generic_write(p4::Update_Type type, p4::TableEntry *entry);
-  DeviceMgr::Status add_one(p4::TableEntry *entry);
-  DeviceMgr::Status remove(p4::TableEntry *entry);
-  DeviceMgr::Status modify(p4::TableEntry *entry);
+  DeviceMgr::Status generic_write(p4v1::Update_Type type,
+                                  p4v1::TableEntry *entry);
+  DeviceMgr::Status add_one(p4v1::TableEntry *entry);
+  DeviceMgr::Status remove(p4v1::TableEntry *entry);
+  DeviceMgr::Status modify(p4v1::TableEntry *entry);
 
   boost::optional<MatchKeyInput> default_mf() const;
 
@@ -409,8 +417,8 @@ class MatchTableTest
 };
 
 DeviceMgr::Status
-MatchTableTest::generic_write(p4::Update_Type type, p4::TableEntry *entry) {
-  p4::WriteRequest request;
+MatchTableTest::generic_write(p4v1::Update_Type type, p4v1::TableEntry *entry) {
+  p4v1::WriteRequest request;
   auto update = request.add_updates();
   update->set_type(type);
   auto entity = update->mutable_entity();
@@ -421,27 +429,27 @@ MatchTableTest::generic_write(p4::Update_Type type, p4::TableEntry *entry) {
 }
 
 DeviceMgr::Status
-MatchTableTest::add_one(p4::TableEntry *entry) {
-  return generic_write(p4::Update_Type_INSERT, entry);
+MatchTableTest::add_one(p4v1::TableEntry *entry) {
+  return generic_write(p4v1::Update_Type_INSERT, entry);
 }
 
 DeviceMgr::Status
-MatchTableTest::remove(p4::TableEntry *entry) {
-  return generic_write(p4::Update_Type_DELETE, entry);
+MatchTableTest::remove(p4v1::TableEntry *entry) {
+  return generic_write(p4v1::Update_Type_DELETE, entry);
 }
 
 DeviceMgr::Status
-MatchTableTest::modify(p4::TableEntry *entry) {
-  return generic_write(p4::Update_Type_MODIFY, entry);
+MatchTableTest::modify(p4v1::TableEntry *entry) {
+  return generic_write(p4v1::Update_Type_MODIFY, entry);
 }
 
-p4::TableEntry
+p4v1::TableEntry
 MatchTableTest::generic_make(pi_p4_id_t t_id,
-                             boost::optional<p4::FieldMatch> mf,
+                             boost::optional<p4v1::FieldMatch> mf,
                              const std::string &param_v,
                              int priority,
                              uint64_t controller_metadata) {
-  p4::TableEntry table_entry;
+  p4v1::TableEntry table_entry;
   table_entry.set_table_id(t_id);
   table_entry.set_controller_metadata(controller_metadata);
   table_entry.set_priority(priority);
@@ -472,10 +480,10 @@ MatchTableTest::default_mf() const {
       return MatchKeyInput::make_lpm(std::string(4, '\x00'), 0);
     case MatchKeyInput::Type::TERNARY:
       return MatchKeyInput::make_ternary(
-          std::string(4, '\x00'), std::string(4, '\x00'), 0);
+          std::string(4, '\x00'), std::string(4, '\x00'), PRIORITY);
     case MatchKeyInput::Type::RANGE:
       return MatchKeyInput::make_range(
-          std::string(4, '\x00'), std::string(4, '\xff'), 0);
+          std::string(4, '\x00'), std::string(4, '\xff'), PRIORITY);
   }
   return boost::none;  // unreachable
 }
@@ -504,7 +512,7 @@ TEST_P(MatchTableTest, AddAndRead) {
   // 2 different reads: first one is wildcard read on the table, other filters
   // on the match key.
   {
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     auto status = read_table_entries(t_id, &response);
     ASSERT_EQ(status.code(), Code::OK);
     const auto &entities = response.entities();
@@ -513,7 +521,7 @@ TEST_P(MatchTableTest, AddAndRead) {
         MessageDifferencer::Equals(entry, entities.Get(0).table_entry()));
   }
   {
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     auto status = read_table_entry(&entry, &response);
     ASSERT_EQ(status.code(), Code::OK);
     const auto &entities = response.entities();
@@ -618,8 +626,8 @@ TEST_P(MatchTableTest, InvalidTableId) {
         OneExpectedError(Code::INVALID_ARGUMENT, invalid_p4_id_error_str));
   };
   auto check_bad_status_read = [this](pi_p4_id_t bad_id) {
-    p4::ReadResponse response;
-    p4::Entity entity;
+    p4v1::ReadResponse response;
+    p4v1::Entity entity;
     auto table_entry = entity.mutable_table_entry();
     table_entry->set_table_id(bad_id);
     auto status = mgr.read_one(entity, &response);
@@ -647,7 +655,8 @@ TEST_P(MatchTableTest, InvalidActionId) {
   // build valid table entry, then modify the action id
   std::string adata(6, '\x00');
   auto mk_input = std::get<1>(GetParam());
-  auto entry = generic_make(t_id, mk_input.get_proto(mf_id), adata);
+  auto entry = generic_make(
+      t_id, mk_input.get_proto(mf_id), adata, mk_input.get_priority());
   auto check_bad_status_write = [this, &entry](
       pi_p4_id_t bad_id, const char *msg = invalid_p4_id_error_str) {
     auto action = entry.mutable_action()->mutable_action();
@@ -681,11 +690,12 @@ TEST_P(MatchTableTest, MissingMatchField) {
     auto mk_matcher = CorrectMatchKey(t_id, mk_input.get().get_match_key());
     auto entry_matcher = CorrectTableEntryDirect(a_id, adata);
     EXPECT_CALL(*mock, table_entry_add(t_id, mk_matcher, entry_matcher, _));
-    auto entry = generic_make(t_id, boost::none, adata);
+    auto entry = generic_make(
+        t_id, boost::none, adata, mk_input->get_priority());
     auto status = add_one(&entry);
     ASSERT_EQ(status.code(), Code::OK);
   } else {  // omitting field not supported for match type
-    auto entry = generic_make(t_id, boost::none, adata);
+    auto entry = generic_make(t_id, boost::none, adata, 0);
     auto status = add_one(&entry);
     EXPECT_EQ(status, OneExpectedError(Code::INVALID_ARGUMENT));
   }
@@ -704,22 +714,22 @@ TEST_P(MatchTableTest, WriteBatchWithError) {
       t_id, mk_input.get_proto(mf_id), adata, mk_input.get_priority());
 
   ExpectedErrors expected_errors;
-  p4::WriteRequest request;
+  p4v1::WriteRequest request;
   {
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_DELETE);
+    update->set_type(p4v1::Update_Type_DELETE);
     update->mutable_entity()->mutable_table_entry()->CopyFrom(entry);
     expected_errors.push_back(Code::NOT_FOUND);
   }
   {
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_INSERT);
+    update->set_type(p4v1::Update_Type_INSERT);
     update->mutable_entity()->mutable_table_entry()->CopyFrom(entry);
     expected_errors.push_back(Code::OK);
   }
   {
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_INSERT);
+    update->set_type(p4v1::Update_Type_INSERT);
     update->mutable_entity()->mutable_table_entry()->CopyFrom(entry);
     expected_errors.push_back(Code::ALREADY_EXISTS);
   }
@@ -735,7 +745,6 @@ TEST_P(MatchTableTest, WriteBatchWithError) {
 // for LPM, we need to ensure that mk ends with the appropriate number of
 // trailing zeros
 #define LPM_MK std::string("\xaa\xf0\x00\x00", 4)
-#define PRIORITY 77
 
 INSTANTIATE_TEST_CASE_P(
     MatchTableTypes, MatchTableTest,
@@ -756,7 +765,7 @@ INSTANTIATE_TEST_CASE_P(
 
 class ActionProfTest : public DeviceMgrTest {
  protected:
-  void set_action(p4::Action *action, const std::string &param_v) {
+  void set_action(p4v1::Action *action, const std::string &param_v) {
     auto a_id = pi_p4info_action_id_from_name(p4info, "actionA");
     action->set_action_id(a_id);
     auto param = action->add_params();
@@ -765,9 +774,9 @@ class ActionProfTest : public DeviceMgrTest {
     param->set_value(param_v);
   }
 
-  p4::ActionProfileMember make_member(uint32_t member_id,
-                                      const std::string &param_v = "") {
-    p4::ActionProfileMember member;
+  p4v1::ActionProfileMember make_member(uint32_t member_id,
+                                        const std::string &param_v = "") {
+    p4v1::ActionProfileMember member;
     auto act_prof_id = pi_p4info_act_prof_id_from_name(p4info, "ActProfWS");
     member.set_action_profile_id(act_prof_id);
     member.set_member_id(member_id);
@@ -775,9 +784,9 @@ class ActionProfTest : public DeviceMgrTest {
     return member;
   }
 
-  DeviceMgr::Status write_member(p4::Update_Type type,
-                                 p4::ActionProfileMember *member) {
-    p4::WriteRequest request;
+  DeviceMgr::Status write_member(p4v1::Update_Type type,
+                                 p4v1::ActionProfileMember *member) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
     update->set_type(type);
     auto entity = update->mutable_entity();
@@ -787,27 +796,28 @@ class ActionProfTest : public DeviceMgrTest {
     return status;
   }
 
-  DeviceMgr::Status create_member(p4::ActionProfileMember *member) {
-    return write_member(p4::Update_Type_INSERT, member);
+  DeviceMgr::Status create_member(p4v1::ActionProfileMember *member) {
+    return write_member(p4v1::Update_Type_INSERT, member);
   }
 
-  DeviceMgr::Status modify_member(p4::ActionProfileMember *member) {
-    return write_member(p4::Update_Type_MODIFY, member);
+  DeviceMgr::Status modify_member(p4v1::ActionProfileMember *member) {
+    return write_member(p4v1::Update_Type_MODIFY, member);
   }
 
-  DeviceMgr::Status delete_member(p4::ActionProfileMember *member) {
-    return write_member(p4::Update_Type_DELETE, member);
+  DeviceMgr::Status delete_member(p4v1::ActionProfileMember *member) {
+    return write_member(p4v1::Update_Type_DELETE, member);
   }
 
-  void add_member_to_group(p4::ActionProfileGroup *group, uint32_t member_id) {
+  void add_member_to_group(p4v1::ActionProfileGroup *group,
+                           uint32_t member_id) {
     auto member = group->add_members();
     member->set_member_id(member_id);
   }
 
   template <typename It>
-  p4::ActionProfileGroup make_group(uint32_t group_id,
-                                    It members_begin, It members_end) {
-    p4::ActionProfileGroup group;
+  p4v1::ActionProfileGroup make_group(uint32_t group_id,
+                                      It members_begin, It members_end) {
+    p4v1::ActionProfileGroup group;
     auto act_prof_id = pi_p4info_act_prof_id_from_name(p4info, "ActProfWS");
     group.set_action_profile_id(act_prof_id);
     group.set_group_id(group_id);
@@ -818,14 +828,14 @@ class ActionProfTest : public DeviceMgrTest {
     return group;
   }
 
-  p4::ActionProfileGroup make_group(uint32_t group_id) {
+  p4v1::ActionProfileGroup make_group(uint32_t group_id) {
     std::vector<uint32_t> members;
     return make_group(group_id, members.begin(), members.end());
   }
 
-  DeviceMgr::Status write_group(p4::Update_Type type,
-                                p4::ActionProfileGroup *group) {
-    p4::WriteRequest request;
+  DeviceMgr::Status write_group(p4v1::Update_Type type,
+                                p4v1::ActionProfileGroup *group) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
     update->set_type(type);
     auto entity = update->mutable_entity();
@@ -835,16 +845,16 @@ class ActionProfTest : public DeviceMgrTest {
     return status;
   }
 
-  DeviceMgr::Status create_group(p4::ActionProfileGroup *group) {
-    return write_group(p4::Update_Type_INSERT, group);
+  DeviceMgr::Status create_group(p4v1::ActionProfileGroup *group) {
+    return write_group(p4v1::Update_Type_INSERT, group);
   }
 
-  DeviceMgr::Status modify_group(p4::ActionProfileGroup *group) {
-    return write_group(p4::Update_Type_MODIFY, group);
+  DeviceMgr::Status modify_group(p4v1::ActionProfileGroup *group) {
+    return write_group(p4v1::Update_Type_MODIFY, group);
   }
 
-  DeviceMgr::Status delete_group(p4::ActionProfileGroup *group) {
-    return write_group(p4::Update_Type_DELETE, group);
+  DeviceMgr::Status delete_group(p4v1::ActionProfileGroup *group) {
+    return write_group(p4v1::Update_Type_DELETE, group);
   }
 };
 
@@ -978,8 +988,8 @@ TEST_F(ActionProfTest, Read) {
   ASSERT_EQ(create_group(&group).code(), Code::OK);
 
   EXPECT_CALL(*mock, action_prof_entries_fetch(act_prof_id, _)).Times(2);
-  p4::ReadResponse response;
-  p4::ReadRequest request;
+  p4v1::ReadResponse response;
+  p4v1::ReadRequest request;
   {
     auto entity = request.add_entities();
     auto member = entity->mutable_action_profile_member();
@@ -1043,8 +1053,8 @@ TEST_F(ActionProfTest, InvalidActionProfId) {
         OneExpectedError(Code::INVALID_ARGUMENT, invalid_p4_id_error_str));
   };
   auto check_bad_status_read = [this](pi_p4_id_t bad_id) {
-    p4::ReadResponse response;
-    p4::Entity entity;
+    p4v1::ReadResponse response;
+    p4v1::Entity entity;
     auto member = entity.mutable_action_profile_member();
     member->set_action_profile_id(bad_id);
     auto status = mgr.read_one(entity, &response);
@@ -1101,7 +1111,7 @@ TEST_F(ActionProfTest, InvalidActionId) {
 
 class MatchTableIndirectTest : public DeviceMgrTest {
  protected:
-  void set_action(p4::Action *action, const std::string &param_v) {
+  void set_action(p4v1::Action *action, const std::string &param_v) {
     auto a_id = pi_p4info_action_id_from_name(p4info, "actionA");
     action->set_action_id(a_id);
     auto param = action->add_params();
@@ -1110,9 +1120,9 @@ class MatchTableIndirectTest : public DeviceMgrTest {
     param->set_value(param_v);
   }
 
-  p4::ActionProfileMember make_member(uint32_t member_id,
-                                      const std::string &param_v = "") {
-    p4::ActionProfileMember member;
+  p4v1::ActionProfileMember make_member(uint32_t member_id,
+                                        const std::string &param_v = "") {
+    p4v1::ActionProfileMember member;
     auto act_prof_id = pi_p4info_act_prof_id_from_name(p4info, "ActProfWS");
     member.set_action_profile_id(act_prof_id);
     member.set_member_id(member_id);
@@ -1124,9 +1134,9 @@ class MatchTableIndirectTest : public DeviceMgrTest {
     auto act_prof_id = pi_p4info_act_prof_id_from_name(p4info, "ActProfWS");
     EXPECT_CALL(*mock, action_prof_member_create(act_prof_id, _, _));
     auto member = make_member(member_id, param_v);
-    p4::WriteRequest request;
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_INSERT);
+    update->set_type(p4v1::Update_Type_INSERT);
     auto entity = update->mutable_entity();
     entity->set_allocated_action_profile_member(&member);
     auto status = mgr.write(request);
@@ -1135,9 +1145,9 @@ class MatchTableIndirectTest : public DeviceMgrTest {
   }
 
   template <typename It>
-  p4::ActionProfileGroup make_group(uint32_t group_id,
-                                    It members_begin, It members_end) {
-    p4::ActionProfileGroup group;
+  p4v1::ActionProfileGroup make_group(uint32_t group_id,
+                                      It members_begin, It members_end) {
+    p4v1::ActionProfileGroup group;
     auto act_prof_id = pi_p4info_act_prof_id_from_name(p4info, "ActProfWS");
     group.set_action_profile_id(act_prof_id);
     group.set_group_id(group_id);
@@ -1156,9 +1166,9 @@ class MatchTableIndirectTest : public DeviceMgrTest {
     EXPECT_CALL(*mock, action_prof_group_add_member(act_prof_id, _, _))
         .Times(std::distance(members_begin, members_end));
     auto group = make_group(group_id, members_begin, members_end);
-    p4::WriteRequest request;
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_INSERT);
+    update->set_type(p4v1::Update_Type_INSERT);
     auto entity = update->mutable_entity();
     entity->set_allocated_action_profile_group(&group);
     auto status = mgr.write(request);
@@ -1170,20 +1180,20 @@ class MatchTableIndirectTest : public DeviceMgrTest {
     create_group(group_id, &member_id, (&member_id) + 1);
   }
 
-  p4::TableEntry make_indirect_entry_to_member(const std::string &mf_v,
-                                               uint32_t member_id) {
+  p4v1::TableEntry make_indirect_entry_to_member(const std::string &mf_v,
+                                                 uint32_t member_id) {
     return make_indirect_entry_common(mf_v, member_id, false);
   }
 
-  p4::TableEntry make_indirect_entry_to_group(const std::string &mf_v,
-                                               uint32_t group_id) {
+  p4v1::TableEntry make_indirect_entry_to_group(const std::string &mf_v,
+                                                uint32_t group_id) {
     return make_indirect_entry_common(mf_v, group_id, true);
   }
 
-  DeviceMgr::Status add_indirect_entry(p4::TableEntry *entry) {
-    p4::WriteRequest request;
+  DeviceMgr::Status add_indirect_entry(p4v1::TableEntry *entry) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_INSERT);
+    update->set_type(p4v1::Update_Type_INSERT);
     auto entity = update->mutable_entity();
     entity->set_allocated_table_entry(entry);
     auto status = mgr.write(request);
@@ -1192,10 +1202,10 @@ class MatchTableIndirectTest : public DeviceMgrTest {
   }
 
  private:
-  p4::TableEntry make_indirect_entry_common(const std::string &mf_v,
-                                            uint32_t indirect_id,
-                                            bool is_group) {
-    p4::TableEntry table_entry;
+  p4v1::TableEntry make_indirect_entry_common(const std::string &mf_v,
+                                              uint32_t indirect_id,
+                                              bool is_group) {
+    p4v1::TableEntry table_entry;
     auto t_id = pi_p4info_table_id_from_name(p4info, "IndirectWS");
     table_entry.set_table_id(t_id);
     auto mf = table_entry.add_match();
@@ -1227,8 +1237,8 @@ TEST_F(MatchTableIndirectTest, Member) {
   ASSERT_EQ(status.code(), Code::OK);
 
   EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
-  p4::ReadResponse response;
-  p4::Entity entity;
+  p4v1::ReadResponse response;
+  p4v1::Entity entity;
   auto table_entry = entity.mutable_table_entry();
   table_entry->set_table_id(t_id);
   status = mgr.read_one(entity, &response);
@@ -1255,8 +1265,8 @@ TEST_F(MatchTableIndirectTest, Group) {
   ASSERT_EQ(status.code(), Code::OK);
 
   EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
-  p4::ReadResponse response;
-  p4::Entity entity;
+  p4v1::ReadResponse response;
+  p4v1::Entity entity;
   auto table_entry = entity.mutable_table_entry();
   table_entry->set_table_id(t_id);
   status = mgr.read_one(entity, &response);
@@ -1278,9 +1288,9 @@ class ExactOneTest : public DeviceMgrTest {
   ExactOneTest()
       : ExactOneTest("ExactOne", "header_test.field32") { }
 
-  p4::TableEntry make_entry(const std::string &mf_v,
-                            const std::string &param_v) {
-    p4::TableEntry table_entry;
+  p4v1::TableEntry make_entry(const std::string &mf_v,
+                              const std::string &param_v) {
+    p4v1::TableEntry table_entry;
     table_entry.set_table_id(t_id);
     auto mf = table_entry.add_match();
     mf->set_field_id(pi_p4info_table_match_field_id_from_name(
@@ -1321,10 +1331,10 @@ class DirectMeterTest : public ExactOneTest {
     m_id = pi_p4info_meter_id_from_name(p4info, "ExactOne_meter");
   }
 
-  DeviceMgr::Status set_meter(p4::DirectMeterEntry *direct_meter_entry) {
-    p4::WriteRequest request;
+  DeviceMgr::Status set_meter(p4v1::DirectMeterEntry *direct_meter_entry) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_MODIFY);
+    update->set_type(p4v1::Update_Type_MODIFY);
     auto entity = update->mutable_entity();
     entity->set_allocated_direct_meter_entry(direct_meter_entry);
     auto status = mgr.write(request);
@@ -1332,16 +1342,16 @@ class DirectMeterTest : public ExactOneTest {
     return status;
   }
 
-  p4::DirectMeterEntry make_meter_entry(const p4::TableEntry &entry,
-                                        const p4::MeterConfig &config) {
-    p4::DirectMeterEntry direct_meter_entry;
+  p4v1::DirectMeterEntry make_meter_entry(const p4v1::TableEntry &entry,
+                                          const p4v1::MeterConfig &config) {
+    p4v1::DirectMeterEntry direct_meter_entry;
     direct_meter_entry.mutable_table_entry()->CopyFrom(entry);
     direct_meter_entry.mutable_config()->CopyFrom(config);
     return direct_meter_entry;
   }
 
-  p4::MeterConfig make_meter_config() const {
-    p4::MeterConfig config;
+  p4v1::MeterConfig make_meter_config() const {
+    p4v1::MeterConfig config;
     config.set_cir(10);
     config.set_cburst(5);
     config.set_pir(100);
@@ -1349,9 +1359,9 @@ class DirectMeterTest : public ExactOneTest {
     return config;
   }
 
-  DeviceMgr::Status read_meter(p4::DirectMeterEntry *direct_meter_entry,
-                               p4::ReadResponse *response) {
-    p4::ReadRequest request;
+  DeviceMgr::Status read_meter(p4v1::DirectMeterEntry *direct_meter_entry,
+                               p4v1::ReadResponse *response) {
+    p4v1::ReadRequest request;
     auto entity = request.add_entities();
     entity->set_allocated_direct_meter_entry(direct_meter_entry);
     auto status = mgr.read(request, response);
@@ -1389,7 +1399,7 @@ TEST_F(DirectMeterTest, WriteAndRead) {
   // read with DirectMeterEntry
   EXPECT_CALL(*mock, meter_read_direct(m_id, entry_h, _));
   {
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     auto status = read_meter(&meter_entry, &response);
     ASSERT_EQ(status.code(), Code::OK);
     const auto &entities = response.entities();
@@ -1401,8 +1411,8 @@ TEST_F(DirectMeterTest, WriteAndRead) {
   // read with TableEntry
   EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
   {
-    p4::ReadResponse response;
-    p4::Entity entity;
+    p4v1::ReadResponse response;
+    p4v1::Entity entity;
     auto table_entry = entity.mutable_table_entry();
     table_entry->set_table_id(t_id);
     table_entry->mutable_meter_config();
@@ -1456,7 +1466,7 @@ TEST_F(DirectMeterTest, InvalidTableEntry) {
 }
 
 TEST_F(DirectMeterTest, MissingTableEntry) {
-  p4::DirectMeterEntry meter_entry;
+  p4v1::DirectMeterEntry meter_entry;
   auto status = set_meter(&meter_entry);
   EXPECT_EQ(status, OneExpectedError(Code::INVALID_ARGUMENT));
 }
@@ -1468,9 +1478,9 @@ class IndirectMeterTest : public DeviceMgrTest  {
     m_size = pi_p4info_meter_get_size(p4info, m_id);
   }
 
-  DeviceMgr::Status read_meter(p4::MeterEntry *meter_entry,
-                               p4::ReadResponse *response) {
-    p4::ReadRequest request;
+  DeviceMgr::Status read_meter(p4v1::MeterEntry *meter_entry,
+                               p4v1::ReadResponse *response) {
+    p4v1::ReadRequest request;
     auto entity = request.add_entities();
     entity->set_allocated_meter_entry(meter_entry);
     auto status = mgr.read(request, response);
@@ -1478,10 +1488,10 @@ class IndirectMeterTest : public DeviceMgrTest  {
     return status;
   }
 
-  DeviceMgr::Status write_meter(p4::MeterEntry *meter_entry) {
-    p4::WriteRequest request;
+  DeviceMgr::Status write_meter(p4v1::MeterEntry *meter_entry) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_MODIFY);
+    update->set_type(p4v1::Update_Type_MODIFY);
     auto entity = update->mutable_entity();
     entity->set_allocated_meter_entry(meter_entry);
     auto status = mgr.write(request);
@@ -1489,8 +1499,8 @@ class IndirectMeterTest : public DeviceMgrTest  {
     return status;
   }
 
-  p4::MeterConfig make_meter_config() const {
-    p4::MeterConfig config;
+  p4v1::MeterConfig make_meter_config() const {
+    p4v1::MeterConfig config;
     config.set_cir(10);
     config.set_cburst(5);
     config.set_pir(100);
@@ -1498,7 +1508,7 @@ class IndirectMeterTest : public DeviceMgrTest  {
     return config;
   }
 
-  void set_index(p4::MeterEntry *meter_entry, int index) const {
+  void set_index(p4v1::MeterEntry *meter_entry, int index) const {
     auto *index_msg = meter_entry->mutable_index();
     index_msg->set_index(index);
   }
@@ -1509,8 +1519,8 @@ class IndirectMeterTest : public DeviceMgrTest  {
 
 TEST_F(IndirectMeterTest, WriteAndRead) {
   int index = 66;
-  p4::ReadResponse response;
-  p4::MeterEntry meter_entry;
+  p4v1::ReadResponse response;
+  p4v1::MeterEntry meter_entry;
   meter_entry.set_meter_id(m_id);
   set_index(&meter_entry, index);
   auto meter_config = make_meter_config();
@@ -1543,9 +1553,9 @@ class DirectCounterTest : public ExactOneTest {
   }
 
   // sends a read request for a DirectCounterEntry; returns the RPC status
-  DeviceMgr::Status read_counter(p4::DirectCounterEntry *direct_counter_entry,
-                                 p4::ReadResponse *response) {
-    p4::ReadRequest request;
+  DeviceMgr::Status read_counter(p4v1::DirectCounterEntry *direct_counter_entry,
+                                 p4v1::ReadResponse *response) {
+    p4v1::ReadRequest request;
     auto entity = request.add_entities();
     entity->set_allocated_direct_counter_entry(direct_counter_entry);
     auto status = mgr.read(request, response);
@@ -1554,10 +1564,10 @@ class DirectCounterTest : public ExactOneTest {
   }
 
   DeviceMgr::Status write_counter(
-      p4::DirectCounterEntry *direct_counter_entry) {
-    p4::WriteRequest request;
+      p4v1::DirectCounterEntry *direct_counter_entry) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_MODIFY);
+    update->set_type(p4v1::Update_Type_MODIFY);
     auto entity = update->mutable_entity();
     entity->set_allocated_direct_counter_entry(direct_counter_entry);
     auto status = mgr.write(request);
@@ -1565,8 +1575,8 @@ class DirectCounterTest : public ExactOneTest {
     return status;
   }
 
-  p4::DirectCounterEntry make_counter_entry(const p4::TableEntry *entry) {
-    p4::DirectCounterEntry direct_counter_entry;
+  p4v1::DirectCounterEntry make_counter_entry(const p4v1::TableEntry *entry) {
+    p4v1::DirectCounterEntry direct_counter_entry;
     if (entry) direct_counter_entry.mutable_table_entry()->CopyFrom(*entry);
     return direct_counter_entry;
   }
@@ -1601,7 +1611,7 @@ TEST_F(DirectCounterTest, WriteAndRead) {
   // read with DirectCounterEntry
   EXPECT_CALL(*mock, counter_read_direct(c_id, entry_h, _, _));
   {
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     auto status = read_counter(&counter_entry, &response);
     ASSERT_EQ(status.code(), Code::OK);
     const auto &entities = response.entities();
@@ -1615,8 +1625,8 @@ TEST_F(DirectCounterTest, WriteAndRead) {
   // read with TableEntry
   EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
   {
-    p4::ReadResponse response;
-    p4::Entity entity;
+    p4v1::ReadResponse response;
+    p4v1::Entity entity;
     auto table_entry = entity.mutable_table_entry();
     table_entry->set_table_id(t_id);
     table_entry->mutable_counter_data();
@@ -1647,7 +1657,7 @@ TEST_F(DirectCounterTest, InvalidTableEntry) {
   auto entry_1 = make_entry(mf_1, adata);
   auto counter_entry = make_counter_entry(&entry_1);
   {
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     auto status = read_counter(&counter_entry, &response);
     ASSERT_EQ(status.code(), Code::INVALID_ARGUMENT);
   }
@@ -1666,24 +1676,24 @@ TEST_F(DirectCounterTest, ReadAllFromTable) {
     ASSERT_EQ(status.code(), Code::OK);
   }
 
-  p4::ReadResponse response;
-  p4::DirectCounterEntry counter_entry;
+  p4v1::ReadResponse response;
+  p4v1::DirectCounterEntry counter_entry;
   counter_entry.mutable_table_entry()->set_table_id(entry.table_id());
   auto status = read_counter(&counter_entry, &response);
   ASSERT_EQ(status.code(), Code::UNIMPLEMENTED);
 }
 
 TEST_F(DirectCounterTest, MissingTableEntry) {
-  p4::ReadResponse response;
-  p4::DirectCounterEntry counter_entry;
+  p4v1::ReadResponse response;
+  p4v1::DirectCounterEntry counter_entry;
   auto status = read_counter(&counter_entry, &response);
   EXPECT_EQ(status.code(), Code::INVALID_ARGUMENT);
 }
 
 // TODO(antonin)
 TEST_F(DirectCounterTest, ReadAll) {
-  p4::ReadResponse response;
-  p4::DirectCounterEntry counter_entry;
+  p4v1::ReadResponse response;
+  p4v1::DirectCounterEntry counter_entry;
   counter_entry.mutable_table_entry();
   auto status = read_counter(&counter_entry, &response);
   ASSERT_EQ(status.code(), Code::UNIMPLEMENTED);
@@ -1715,9 +1725,9 @@ class IndirectCounterTest : public DeviceMgrTest  {
   }
 
   // sends a read request for a CounterEntry; returns the RPC status
-  DeviceMgr::Status read_counter(p4::CounterEntry *counter_entry,
-                                 p4::ReadResponse *response) {
-    p4::ReadRequest request;
+  DeviceMgr::Status read_counter(p4v1::CounterEntry *counter_entry,
+                                 p4v1::ReadResponse *response) {
+    p4v1::ReadRequest request;
     auto entity = request.add_entities();
     entity->set_allocated_counter_entry(counter_entry);
     auto status = mgr.read(request, response);
@@ -1725,10 +1735,10 @@ class IndirectCounterTest : public DeviceMgrTest  {
     return status;
   }
 
-  DeviceMgr::Status write_counter(p4::CounterEntry *counter_entry) {
-    p4::WriteRequest request;
+  DeviceMgr::Status write_counter(p4v1::CounterEntry *counter_entry) {
+    p4v1::WriteRequest request;
     auto update = request.add_updates();
-    update->set_type(p4::Update_Type_MODIFY);
+    update->set_type(p4v1::Update_Type_MODIFY);
     auto entity = update->mutable_entity();
     entity->set_allocated_counter_entry(counter_entry);
     auto status = mgr.write(request);
@@ -1736,7 +1746,7 @@ class IndirectCounterTest : public DeviceMgrTest  {
     return status;
   }
 
-  void set_index(p4::CounterEntry *counter_entry, int index) const {
+  void set_index(p4v1::CounterEntry *counter_entry, int index) const {
     auto *index_msg = counter_entry->mutable_index();
     index_msg->set_index(index);
   }
@@ -1747,8 +1757,8 @@ class IndirectCounterTest : public DeviceMgrTest  {
 
 TEST_F(IndirectCounterTest, WriteAndRead) {
   int index = 66;
-  p4::ReadResponse response;
-  p4::CounterEntry counter_entry;
+  p4v1::ReadResponse response;
+  p4v1::CounterEntry counter_entry;
   counter_entry.set_counter_id(c_id);
   set_index(&counter_entry, index);
   auto *counter_data = counter_entry.mutable_data();
@@ -1775,8 +1785,8 @@ TEST_F(IndirectCounterTest, WriteAndRead) {
 }
 
 TEST_F(IndirectCounterTest, ReadAll) {
-  p4::ReadResponse response;
-  p4::CounterEntry counter_entry;
+  p4v1::ReadResponse response;
+  p4v1::CounterEntry counter_entry;
   counter_entry.set_counter_id(c_id);
 
   // TODO(antonin): match index?
@@ -1805,8 +1815,8 @@ class MatchKeyFormatTest : public ExactOneTest {
   MatchKeyFormatTest()
       : ExactOneTest("ExactOneNonAligned", "header_test.field12") { }
 
-  p4::TableEntry make_entry_no_mk() {
-    p4::TableEntry table_entry;
+  p4v1::TableEntry make_entry_no_mk() {
+    p4v1::TableEntry table_entry;
     table_entry.set_table_id(t_id);
     auto entry = table_entry.mutable_action();
     auto action = entry->mutable_action();
@@ -1820,7 +1830,7 @@ class MatchKeyFormatTest : public ExactOneTest {
     return table_entry;
   }
 
-  void add_one_mf(p4::TableEntry *entry, const std::string &mf_v) {
+  void add_one_mf(p4v1::TableEntry *entry, const std::string &mf_v) {
     auto mf = entry->add_match();
     mf->set_field_id(pi_p4info_table_match_field_id_from_name(
         p4info, t_id, "header_test.field12"));
@@ -1906,11 +1916,13 @@ class TernaryOneTest : public DeviceMgrTest {
   TernaryOneTest()
       : TernaryOneTest("TernaryOne", "header_test.field32") { }
 
-  p4::TableEntry make_entry(const boost::optional<std::string> &mf_v,
-                            const boost::optional<std::string> &mask_v,
-                            const std::string &param_v) {
-    p4::TableEntry table_entry;
+  p4v1::TableEntry make_entry(const boost::optional<std::string> &mf_v,
+                              const boost::optional<std::string> &mask_v,
+                              const std::string &param_v,
+                              int priority = PRIORITY) {
+    p4v1::TableEntry table_entry;
     table_entry.set_table_id(t_id);
+    table_entry.set_priority(priority);
     // not supported by older versions of boost
     // if (mf_v != boost::none) {
     if (mf_v.is_initialized()) {
@@ -1965,7 +1977,7 @@ TEST_F(TernaryOneTest, DontCare) {
     auto status = add_entry(&entry);
     ASSERT_EQ(status.code(), Code::OK);
 
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     {
       EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
       auto status = read_table_entries(t_id, &response);
@@ -1983,6 +1995,14 @@ TEST_F(TernaryOneTest, DontCare) {
   }
 }
 
+TEST_F(TernaryOneTest, ZeroPriority) {
+  std::string adata(6, '\x00');
+  auto entry = make_entry(boost::none, boost::none, adata, 0);
+  EXPECT_CALL(*mock, table_entry_add(t_id, _, _, _)).Times(0);
+  auto status = add_entry(&entry);
+  EXPECT_EQ(status, OneExpectedError(Code::INVALID_ARGUMENT));
+}
+
 class RangeOneTest : public DeviceMgrTest {
  protected:
   RangeOneTest(const std::string &t_name, const std::string &f_name)
@@ -1994,11 +2014,12 @@ class RangeOneTest : public DeviceMgrTest {
   RangeOneTest()
       : RangeOneTest("RangeOne", "header_test.field32") { }
 
-  p4::TableEntry make_entry(const boost::optional<std::string> &low_v,
+  p4v1::TableEntry make_entry(const boost::optional<std::string> &low_v,
                             const boost::optional<std::string> &high_v,
                             const std::string &param_v) {
-    p4::TableEntry table_entry;
+    p4v1::TableEntry table_entry;
     table_entry.set_table_id(t_id);
+    table_entry.set_priority(PRIORITY);
     // not supported by older versions of boost
     // if (low_v != boost::none) {
     if (low_v.is_initialized()) {
@@ -2061,7 +2082,7 @@ TEST_F(RangeOneTest, DontCare) {
     auto status = add_entry(&entry);
     ASSERT_EQ(status.code(), Code::OK);
 
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     {
       EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
       auto status = read_table_entries(t_id, &response);
@@ -2090,9 +2111,10 @@ class LpmOneTest : public DeviceMgrTest {
   LpmOneTest()
       : LpmOneTest("LpmOne", "header_test.field32") { }
 
-  p4::TableEntry make_entry(const boost::optional<std::string> &mf_v, int pLen,
-                            const std::string &param_v) {
-    p4::TableEntry table_entry;
+  p4v1::TableEntry make_entry(const boost::optional<std::string> &mf_v,
+                              int pLen,
+                              const std::string &param_v) {
+    p4v1::TableEntry table_entry;
     table_entry.set_table_id(t_id);
     // not supported by older versions of boost
     // if (mf_v != boost::none) {
@@ -2162,7 +2184,7 @@ TEST_F(LpmOneTest, DontCare) {
     auto status = add_entry(&entry);
     ASSERT_EQ(status.code(), Code::OK);
 
-    p4::ReadResponse response;
+    p4v1::ReadResponse response;
     {
       EXPECT_CALL(*mock, table_entries_fetch(t_id, _));
       auto status = read_table_entries(t_id, &response);
@@ -2188,13 +2210,14 @@ class TernaryTwoTest : public DeviceMgrTest {
     a_id = pi_p4info_action_id_from_name(p4info, "actionA");
   }
 
-  p4::TableEntry make_entry(const std::string &mf1_v,
-                            const std::string &mask1_v,
-                            const std::string &mf2_v,
-                            const std::string &mask2_v,
-                            const std::string &param_v) {
-    p4::TableEntry table_entry;
+  p4v1::TableEntry make_entry(const std::string &mf1_v,
+                              const std::string &mask1_v,
+                              const std::string &mf2_v,
+                              const std::string &mask2_v,
+                              const std::string &param_v) {
+    p4v1::TableEntry table_entry;
     table_entry.set_table_id(t_id);
+    table_entry.set_priority(PRIORITY);
     if (!mf1_v.empty()) {
       auto mf = table_entry.add_match();
       mf->set_field_id(pi_p4info_table_match_field_id_from_name(
@@ -2255,33 +2278,146 @@ TEST_F(TernaryTwoTest, MissingMatchField) {
 }
 
 
-// Placeholder for PRE tests: for now there is no support in DeviceMgr
-class PRETest : public DeviceMgrTest { };
+class PREMulticastTest : public DeviceMgrTest {
+ protected:
+  using GroupEntry = ::p4v1::MulticastGroupEntry;
 
-TEST_F(PRETest, Write) {
-  p4::WriteRequest request;
+  DeviceMgr::Status create_group(const GroupEntry &group) {
+    return write_group(group, p4v1::Update_Type_INSERT);
+  }
+
+  DeviceMgr::Status modify_group(const GroupEntry &group) {
+    return write_group(group, p4v1::Update_Type_MODIFY);
+  }
+
+  DeviceMgr::Status delete_group(const GroupEntry &group) {
+    return write_group(group, p4v1::Update_Type_DELETE);
+  }
+
+  struct ReplicaMgr {
+    explicit ReplicaMgr(GroupEntry *group)
+        : group(group) { }
+
+    ReplicaMgr &push_back(int32_t port, int32_t rid) {
+      auto r = group->add_replicas();
+      r->set_egress_port(port);
+      r->set_instance(rid);
+      return *this;
+    }
+
+    void pop_back() {
+      group->mutable_replicas()->RemoveLast();
+    }
+
+    GroupEntry *group;
+  };
+
+ private:
+  DeviceMgr::Status write_group(const GroupEntry &group,
+                                p4v1::Update_Type type) {
+    p4v1::WriteRequest request;
+    auto *update = request.add_updates();
+    update->set_type(type);
+    auto *entity = update->mutable_entity();
+    auto *pre_entry = entity->mutable_packet_replication_engine_entry();
+    pre_entry->mutable_multicast_group_entry()->CopyFrom(group);
+    return mgr.write(request);
+  }
+};
+
+TEST_F(PREMulticastTest, Write) {
+  int32_t group_id = 66;
+  GroupEntry group;
+  group.set_multicast_group_id(group_id);
+  int32_t port1 = 1, rid1 = 1, port2 = 2, rid2 = 2;
+  ReplicaMgr replicas(&group);
+  replicas.push_back(port1, rid1).push_back(port2, rid2);
+  EXPECT_CALL(*mock, mc_grp_create(group_id, _));
+  // need a more complicated matcher because of the C array. The ElementsAre
+  // matcher can be used but required 2 arguments (the count + pointer, in this
+  // order)
+  EXPECT_CALL(*mock, mc_node_create(rid1, _, _, _))
+      .With(Args<2, 1>(ElementsAre(port1)));
+  EXPECT_CALL(*mock, mc_node_create(rid2, _, _, _))
+      .With(Args<2, 1>(ElementsAre(port2)));
+  EXPECT_CALL(*mock, mc_grp_attach_node(_, _)).Times(2);
+  {
+    auto status = create_group(group);
+    ASSERT_EQ(status.code(), Code::OK);
+  }
+  auto grp_h = mock->get_mc_grp_handle();
+
+  int32_t port3 = 3, rid3 = rid1, port4 = 4, rid4 = 4;
+  replicas.push_back(port3, rid3).push_back(port4, rid4);
+  EXPECT_CALL(*mock, mc_node_modify(_, _, _))
+      .With(Args<2, 1>(ElementsAre(port1, port3)));
+  EXPECT_CALL(*mock, mc_node_create(rid4, _, _, _))
+      .With(Args<2, 1>(ElementsAre(port4)));
+  EXPECT_CALL(*mock, mc_grp_attach_node(grp_h, _));
+  {
+    auto status = modify_group(group);
+    ASSERT_EQ(status.code(), Code::OK);
+  }
+  auto node_h = mock->get_mc_node_handle();  // rid4
+
+  replicas.pop_back();
+  EXPECT_CALL(*mock, mc_grp_detach_node(grp_h, node_h));
+  EXPECT_CALL(*mock, mc_node_delete(node_h));
+  {
+    auto status = modify_group(group);
+    ASSERT_EQ(status.code(), Code::OK);
+  }
+
+  EXPECT_CALL(*mock, mc_grp_detach_node(grp_h, _)).Times(2);
+  EXPECT_CALL(*mock, mc_node_delete(_)).Times(2);
+  EXPECT_CALL(*mock, mc_grp_delete(grp_h));
+  {
+    auto status = delete_group(group);
+    ASSERT_EQ(status.code(), Code::OK);
+  }
+}
+
+TEST_F(PREMulticastTest, Duplicates) {
+  int32_t group_id = 66;
+  GroupEntry group;
+  group.set_multicast_group_id(group_id);
+  int32_t port1 = 1, rid1 = 1, port2 = port1, rid2 = rid1;
+  ReplicaMgr replicas(&group);;
+  replicas.push_back(port1, rid1).push_back(port2, rid2);
+  auto status = create_group(group);
+  EXPECT_EQ(status, OneExpectedError(Code::INVALID_ARGUMENT));
+}
+
+TEST_F(PREMulticastTest, Read) {
+  p4v1::ReadRequest request;
+  p4v1::ReadResponse response;
+  auto *entity = request.add_entities();
+  // set oneof to PRE
+  entity->mutable_packet_replication_engine_entry();
+
+  auto status = mgr.read(request, &response);
+  EXPECT_EQ(status.code(), Code::UNIMPLEMENTED);
+}
+
+class PRECloningTest : public DeviceMgrTest { };
+
+TEST_F(PRECloningTest, Write) {
+  p4v1::WriteRequest request;
   auto *update = request.add_updates();
-  update->set_type(p4::Update_Type_MODIFY);
+  update->set_type(p4v1::Update_Type_MODIFY);
   auto *entity = update->mutable_entity();
   auto *pre_entry = entity->mutable_packet_replication_engine_entry();
-  auto *mg_entry = pre_entry->mutable_multicast_group_entry();
-  mg_entry->set_multicast_group_id(1);
-  auto *replica = mg_entry->add_replicas();
-  replica->set_egress_port(1);
-  replica->set_instance(1);
-
+  pre_entry->mutable_clone_session_entry();
   auto status = mgr.write(request);
   EXPECT_EQ(status, OneExpectedError(Code::UNIMPLEMENTED));
 }
 
-TEST_F(PRETest, Read) {
-  p4::ReadRequest request;
-  p4::ReadResponse response;
+TEST_F(PRECloningTest, Read) {
+  p4v1::ReadRequest request;
+  p4v1::ReadResponse response;
   auto *entity = request.add_entities();
-  // set oneof to PRE
   auto *pre_entry = entity->mutable_packet_replication_engine_entry();
-  (void) pre_entry;
-
+  pre_entry->mutable_clone_session_entry();
   auto status = mgr.read(request, &response);
   EXPECT_EQ(status.code(), Code::UNIMPLEMENTED);
 }
@@ -2305,7 +2441,7 @@ class ReadConstTableTest : public DeviceMgrTest {
 
   pi_p4_id_t t_id;
   pi_p4_id_t a_id;
-  p4::WriteRequest const_entries_request;
+  p4v1::WriteRequest const_entries_request;
 };
 
 // This test is not representative of what bmv2 does. In bmv2 const entries are
@@ -2321,7 +2457,7 @@ TEST_F(ReadConstTableTest, P4RuntimeEntries) {
   }
 
   EXPECT_CALL(*mock, table_entries_fetch(t_id, _)).Times(AnyNumber());
-  p4::ReadResponse response;
+  p4v1::ReadResponse response;
   auto status = read_table_entries(t_id, &response);
   EXPECT_EQ(status.code(), Code::OK);
 }
@@ -2359,7 +2495,7 @@ TEST_F(ReadConstTableTest, OutOfBandEntries) {
   }
 
   EXPECT_CALL(*mock, table_entries_fetch(t_id, _)).Times(AnyNumber());
-  p4::ReadResponse response;
+  p4v1::ReadResponse response;
   auto status = read_table_entries(t_id, &response);
   EXPECT_EQ(status.code(), Code::OK);
 }
@@ -2370,9 +2506,9 @@ TEST_F(ReadConstTableTest, OutOfBandEntries) {
 class PVSTest : public DeviceMgrTest { };
 
 TEST_F(PVSTest, Write) {
-  p4::WriteRequest request;
+  p4v1::WriteRequest request;
   auto *update = request.add_updates();
-  update->set_type(p4::Update_Type_MODIFY);
+  update->set_type(p4v1::Update_Type_MODIFY);
   auto *entity = update->mutable_entity();
   auto *pvs_entry = entity->mutable_value_set_entry();
   (void) pvs_entry;
@@ -2381,8 +2517,8 @@ TEST_F(PVSTest, Write) {
 }
 
 TEST_F(PVSTest, Read) {
-  p4::ReadRequest request;
-  p4::ReadResponse response;
+  p4v1::ReadRequest request;
+  p4v1::ReadResponse response;
   auto *entity = request.add_entities();
   // set oneof to PVS
   auto *pvs_entry = entity->mutable_value_set_entry();
@@ -2395,9 +2531,9 @@ TEST_F(PVSTest, Read) {
 class RegisterTest : public DeviceMgrTest { };
 
 TEST_F(RegisterTest, Write) {
-  p4::WriteRequest request;
+  p4v1::WriteRequest request;
   auto *update = request.add_updates();
-  update->set_type(p4::Update_Type_MODIFY);
+  update->set_type(p4v1::Update_Type_MODIFY);
   auto *entity = update->mutable_entity();
   auto *register_entry = entity->mutable_register_entry();
   (void) register_entry;
@@ -2406,8 +2542,8 @@ TEST_F(RegisterTest, Write) {
 }
 
 TEST_F(RegisterTest, Read) {
-  p4::ReadRequest request;
-  p4::ReadResponse response;
+  p4v1::ReadRequest request;
+  p4v1::ReadResponse response;
   auto *entity = request.add_entities();
   auto *register_entry = entity->mutable_register_entry();
   (void) register_entry;
@@ -2419,9 +2555,9 @@ TEST_F(RegisterTest, Read) {
 class DigestTest : public DeviceMgrTest { };
 
 TEST_F(DigestTest, Write) {
-  p4::WriteRequest request;
+  p4v1::WriteRequest request;
   auto *update = request.add_updates();
-  update->set_type(p4::Update_Type_MODIFY);
+  update->set_type(p4v1::Update_Type_MODIFY);
   auto *entity = update->mutable_entity();
   auto *register_entry = entity->mutable_register_entry();
   (void) register_entry;
@@ -2430,8 +2566,8 @@ TEST_F(DigestTest, Write) {
 }
 
 TEST_F(DigestTest, Read) {
-  p4::ReadRequest request;
-  p4::ReadResponse response;
+  p4v1::ReadRequest request;
+  p4v1::ReadResponse response;
   auto *entity = request.add_entities();
   auto *register_entry = entity->mutable_register_entry();
   (void) register_entry;
@@ -2477,32 +2613,32 @@ TEST_F(ReadExclusiveAccess, ConcurrentReadAndWrites) {
     auto member = make_member(member_id, adata);
     auto entry = make_indirect_entry_to_member(mf, member_id);
 
-    std::vector<p4::WriteRequest> requests(4);
+    std::vector<p4v1::WriteRequest> requests(4);
     {
       auto &request = requests.at(0);
       auto *update = request.add_updates();
-      update->set_type(p4::Update_Type_INSERT);
+      update->set_type(p4v1::Update_Type_INSERT);
       auto *entity = update->mutable_entity();
       entity->mutable_action_profile_member()->CopyFrom(member);
     }
     {
       auto &request = requests.at(1);
       auto *update = request.add_updates();
-      update->set_type(p4::Update_Type_INSERT);
+      update->set_type(p4v1::Update_Type_INSERT);
       auto *entity = update->mutable_entity();
       entity->mutable_table_entry()->CopyFrom(entry);
     }
     {
       auto &request = requests.at(2);
       auto *update = request.add_updates();
-      update->set_type(p4::Update_Type_DELETE);
+      update->set_type(p4v1::Update_Type_DELETE);
       auto *entity = update->mutable_entity();
       entity->mutable_table_entry()->CopyFrom(entry);
     }
     {
       auto &request = requests.at(3);
       auto *update = request.add_updates();
-      update->set_type(p4::Update_Type_DELETE);
+      update->set_type(p4v1::Update_Type_DELETE);
       auto *entity = update->mutable_entity();
       entity->mutable_action_profile_member()->CopyFrom(member);
     }
@@ -2521,7 +2657,7 @@ TEST_F(ReadExclusiveAccess, ConcurrentReadAndWrites) {
     EXPECT_CALL(*mock, table_entries_fetch(t_id, _)).Times(AtLeast(1));
     EXPECT_CALL(*mock, action_prof_entries_fetch(act_prof_id, _))
         .Times(AtLeast(1));
-    p4::ReadRequest request;
+    p4v1::ReadRequest request;
     {
       auto *entity = request.add_entities();
       auto *entry = entity->mutable_table_entry();
@@ -2533,7 +2669,7 @@ TEST_F(ReadExclusiveAccess, ConcurrentReadAndWrites) {
       member->set_action_profile_id(act_prof_id);
     }
     while (!stop) {
-      p4::ReadResponse response;
+      p4v1::ReadResponse response;
       auto status = mgr.read(request, &response);
       ASSERT_EQ(status.code(), Code::OK);
       const auto num_objects = response.entities_size();
