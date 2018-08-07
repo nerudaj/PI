@@ -230,6 +230,7 @@ AS_ECHO("Compile for bmv2 ............................. : $want_bmv2")
 AS_IF([test "$want_bmv2" = yes], [
 AS_ECHO("  simple_switch found ........................ : $simple_switch_found")
 ])
+AS_ECHO("Compiler for combo............................ : $want_combo")
 AS_ECHO("Compile C++ frontend ......................... : $want_fe_cpp")
 AS_ECHO("Compile p4runtime.proto and associated fe .... : $with_proto")
 AS_ECHO("Compile internal RPC ......................... : $with_internal_rpc")

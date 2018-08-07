@@ -62,8 +62,8 @@ if WITH_COMBO
 bin_PROGRAMS += pi_CLI_combo
 
 pi_CLI_combo_LDADD = $(common_libs) \
--lp4dev \
-$(top_builddir)/targets/combo/libpi_combo.la 
+$(top_builddir)/targets/combo/libpi_combo.la \
+-lp4dev -lfdt
 
 pi_CLI_combo_SOURCES =
 # Dummy C++ source to cause C++ linking.
