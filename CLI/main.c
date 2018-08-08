@@ -425,6 +425,8 @@ int main_cli(int argc, char *argv[]) {
   }
 
   cleanup();
+  
+  return 0;
 }
 
 
