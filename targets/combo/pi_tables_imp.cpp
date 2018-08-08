@@ -281,7 +281,7 @@ pi_status_t _pi_table_default_action_set(pi_session_handle_t session_handle, pi_
 	}
 
 	// Initialize rule object
-	p4rule_t *rule = createRule(tableName, info, table_id);
+	p4rule_t *rule = p4table_get_rule_template(table); // There might not be match engine, no need to check it
 	if (rule == NULL) {
 		Logger::error("Cannot create rule\n");
 		return pi_status_t(PI_STATUS_TARGET_ERROR);
