@@ -385,7 +385,7 @@ static int parse_opts(int argc, char *const argv[]) {
   return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main_cli(int argc, char *argv[]) {
   if (parse_opts(argc, argv) != 0) return 1;
 
   pi_status_t pirc;
@@ -425,4 +425,9 @@ int main(int argc, char *argv[]) {
   }
 
   cleanup();
+}
+
+
+int main(int argc, char *argv[]) {
+    return main_cli(argc, argv);
 }
