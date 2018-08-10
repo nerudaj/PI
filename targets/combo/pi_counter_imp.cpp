@@ -47,12 +47,12 @@ NOTE: This could come in handy later (as defined in  PI/include/PI/pi_counter.h)
 */
 
 pi_status_t _pi_counter_read(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, size_t index, int flags, pi_counter_data_t *counter_data) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_tgt);
-	COMBO_UNUNSED(counter_id);
-	COMBO_UNUNSED(index);
-	COMBO_UNUNSED(flags);
-	COMBO_UNUNSED(counter_data);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_tgt);
+	COMBO_UNUSED(counter_id);
+	COMBO_UNUSED(index);
+	COMBO_UNUSED(flags);
+	COMBO_UNUSED(counter_data);
 	
 	/*const pi_p4info_t *info = infos[dev_tgt.dev_id];
 	assert(info != NULL);
@@ -89,42 +89,42 @@ pi_status_t _pi_counter_read(pi_session_handle_t session_handle, pi_dev_tgt_t de
 }
 
 pi_status_t _pi_counter_write(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, size_t index, const pi_counter_data_t *counter_data) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_tgt);
-	COMBO_UNUNSED(counter_id);
-	COMBO_UNUNSED(index);
-	COMBO_UNUNSED(counter_data);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_tgt);
+	COMBO_UNUSED(counter_id);
+	COMBO_UNUSED(index);
+	COMBO_UNUSED(counter_data);
 	
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_counter_read_direct(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, pi_entry_handle_t entry_handle, int flags, pi_counter_data_t *counter_data) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_tgt);
-	COMBO_UNUNSED(counter_id);
-	COMBO_UNUNSED(entry_handle);
-	COMBO_UNUNSED(flags);
-	COMBO_UNUNSED(counter_data);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_tgt);
+	COMBO_UNUSED(counter_id);
+	COMBO_UNUSED(entry_handle);
+	COMBO_UNUSED(flags);
+	COMBO_UNUSED(counter_data);
 	
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_counter_write_direct(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, pi_entry_handle_t entry_handle, const pi_counter_data_t *counter_data) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_tgt);
-	COMBO_UNUNSED(counter_id);
-	COMBO_UNUNSED(entry_handle);
-	COMBO_UNUNSED(counter_data);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_tgt);
+	COMBO_UNUSED(counter_id);
+	COMBO_UNUSED(entry_handle);
+	COMBO_UNUSED(counter_data);
 	
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_counter_hw_sync(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, PICounterHwSyncCb cb, void *cb_cookie) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_tgt);
-	COMBO_UNUNSED(counter_id);
-	COMBO_UNUNSED(cb);
-	COMBO_UNUNSED(cb_cookie);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_tgt);
+	COMBO_UNUSED(counter_id);
+	COMBO_UNUSED(cb);
+	COMBO_UNUSED(cb_cookie);
 	
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
