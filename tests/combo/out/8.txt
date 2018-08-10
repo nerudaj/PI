@@ -3,5 +3,5 @@ Rule for table: ipv4_lpm
 	Engine: LPM
 	Default rule
 	Action: set_nhop
-	Params: nhop_ipv4(0000)->port(01)
+	Params: nhop_ipv4(0x0 0x0 0x0 0x0)->port(0x1 0x0)
 

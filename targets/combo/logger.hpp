@@ -3,14 +3,21 @@
 
 #define ENABLE_DEBUG
 
+#include <iostream>
+#include <cstring>
+
 class Logger {
 public:
 	static void debug(const std::string &str) {
-		#ifdef ENABLE_DEBUG
-		std::cout << str << "\n";
-		#else
+	#ifdef ENABLE_DEBUG
+		std::cerr << "DEBUG: " << str << "\n";
+	#else
 		(void)str;
-		#endif
+	#endif
+	}
+	
+	static void error(const std::string &str) {
+		std::cerr << "ERROR: " << str << "\n";
 	}
 };
 

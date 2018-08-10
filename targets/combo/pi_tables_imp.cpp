@@ -22,10 +22,11 @@
 #include <PI/int/serialize.h>
 #include <PI/p4info.h>
 #include <PI/pi.h>
-
-#include <iostream>
+#include <p4dev.h>
+#include <cstring>
 #include "devices.hpp"
 #include "helpers.hpp"
+#include "logger.hpp"
 
 p4rule_t *createRule(const char *tableName, const pi_p4info_t *info, pi_p4_id_t table_id) {
 	std::size_t matchFieldsSize = pi_p4info_table_num_match_fields(info, table_id);
@@ -70,13 +71,21 @@ uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match
 			if (value == NULL) return P4DEV_ALLOCATE_ERROR;
 			memcpy(value, data, bytewidth);
 			data += bytewidth;
+			
+			/* NOTE:
+				P4 Runtime treats data as-is, meaning that IPv4 written as
+				1.2.3.4 will be saved in uint8_t array as [1,2,3,4]. But
+				lip4dev expects data to be ordered as [4,3,2,1]. That is
+				why we have to flip the endianness.
+			 */
+			flipEndianness(value, bytewidth);
 
 			if (last == NULL) {
-				(*key) = cuckoo_p4key_create(keyName, bytewidth, value);
+				(*key) = p4key_exact_create(keyName, bytewidth, value);
 				last = *key;
 			}
 			else {
-				last->next = cuckoo_p4key_create(keyName, bytewidth, value);
+				last->next = p4key_exact_create(keyName, bytewidth, value);
 				last = last->next;
 			}
 			break;
@@ -87,13 +96,14 @@ uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match
 			memcpy(value, data, bytewidth);
 			data += bytewidth;
 			data += retrieve_uint32(data, &prefixLen);
+			flipEndianness(value, bytewidth);
 
 			if (last == NULL) {
-				(*key) = bstlpm_p4key_create(keyName, bytewidth, value, prefixLen);
+				(*key) = p4key_lpm_create(keyName, bytewidth, value, prefixLen);
 				last = *key;
 			}
 			else {
-				last->next = bstlpm_p4key_create(keyName, bytewidth, value, prefixLen);
+				last->next = p4key_lpm_create(keyName, bytewidth, value, prefixLen);
 				last = last->next;
 			}
 			break;
@@ -106,15 +116,17 @@ uint32_t createKeys(const pi_p4info_t *info, pi_p4_id_t table_id, const pi_match
 
 			memcpy(value, data, bytewidth);
 			data += bytewidth;
+			flipEndianness(value, bytewidth);
 			memcpy(mask, data, bytewidth);
 			data += bytewidth;
+			flipEndianness(mask, bytewidth);
 
 			if (last == NULL) {
-				(*key) = tcam_p4key_create(keyName, bytewidth, value, mask);
+				(*key) = p4key_ternary_create(keyName, bytewidth, value, mask);
 				last = *key;
 			}
 			else {
-				last->next = tcam_p4key_create(keyName, bytewidth, value, mask);
+				last->next = p4key_ternary_create(keyName, bytewidth, value, mask);
 				last = last->next;
 			}
 
@@ -164,6 +176,7 @@ uint32_t createParams(const pi_p4info_t *info, const pi_p4_id_t actionID, const 
 		if (data == NULL) return P4DEV_ALLOCATE_ERROR;
 
 		memcpy(data, actionData, paramBytewidth);
+		flipEndianness(data, paramBytewidth); // Everything that is a byte array has to be flipped
 		const char *paramName = pi_p4info_action_param_name_from_id(info, actionID, paramIds[i]);
 
 		if (*param == NULL) {
@@ -194,10 +207,10 @@ uint32_t addAction(const pi_p4info_t *info, const pi_action_data_t *action_data,
 	uint32_t status;
 	if ((status = p4rule_add_action(rule, actionName)) != P4DEV_OK) return status;
 
-	p4param_t *param = NULL;
-	if ((status = createParams(info, actionID, actionData, &param)) != P4DEV_OK) return status;
+	p4param_t *params = NULL;
+	if ((status = createParams(info, actionID, actionData, &params)) != P4DEV_OK) return status;
 	
-	rule->param = param;
+	rule->params = params;
 
 	return P4DEV_OK;
 }
@@ -208,22 +221,23 @@ extern "C" {
 //! return an error, unless the \p overwrite flag is set.
 pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry, int overwrite, pi_entry_handle_t *entry_handle) {
 	(void) session_handle; ///< No support for sessions
+	Logger::debug("PI_table_entry_add");
 	
 	const pi_p4info_t *info = infos[dev_tgt.dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_tgt.dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_tgt.dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 	
 	// Initialize rule object
 	p4rule_t *rule = createRule(tableName, info, table_id);
 	if (rule == NULL) {
-		std::cerr << "Cannot create rule\n";
+		Logger::error("Cannot create rule\n");
 		return pi_status_t(PI_STATUS_TARGET_ERROR);
 	}
 	uint32_t status;
@@ -238,7 +252,8 @@ pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t
 	
 	// Insert rule to table
 	uint32_t ruleIndex;
-	if ((status = table->insertRule(rule, ruleIndex, overwrite)) != P4DEV_OK) {
+	status = p4table_insert_rule(table, rule, &ruleIndex, overwrite);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -252,22 +267,23 @@ pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t
 //! entry was statically configured and set as const in the P4 program.
 pi_status_t _pi_table_default_action_set(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id, const pi_table_entry_t *table_entry) {
 	(void) session_handle;
-
+	Logger::debug("PI_table_default_action_set");
+	
 	const pi_p4info_t *info = infos[dev_tgt.dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_tgt.dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_tgt.dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
 	// Initialize rule object
-	p4rule_t *rule = createRule(tableName, info, table_id);
+	p4rule_t *rule = p4table_get_rule_template(table); // There might not be match engine, no need to check it
 	if (rule == NULL) {
-		std::cerr << "Cannot create rule\n";
+		Logger::error("Cannot create rule\n");
 		return pi_status_t(PI_STATUS_TARGET_ERROR);
 	}
 	p4rule_mark_default(rule);
@@ -278,7 +294,8 @@ pi_status_t _pi_table_default_action_set(pi_session_handle_t session_handle, pi_
 	}
 
 	// Insert rule to table
-	if ((status = table->insertDefaultRule(rule)) != P4DEV_OK) {
+	status = p4table_insert_default_rule(table, rule);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -291,20 +308,21 @@ pi_status_t _pi_table_default_action_set(pi_session_handle_t session_handle, pi_
 //! the P4 program).
 pi_status_t _pi_table_default_action_reset(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id) {
 	(void) session_handle;
+	Logger::debug("PI_table_default_action_reset");
 
 	const pi_p4info_t *info = infos[dev_tgt.dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_tgt.dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_tgt.dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
-	uint32_t status;
-	if ((status = table->resetDefaultRule()) != P4DEV_OK) {
+	uint32_t status = p4table_reset_default_rule(table);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -315,31 +333,33 @@ pi_status_t _pi_table_default_action_reset(pi_session_handle_t session_handle, p
 //! Retrieve the default entry for a table.
 pi_status_t _pi_table_default_action_get(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_entry_t *table_entry) {
 	(void) session_handle;
+	Logger::debug("PI_table_default_action_get");
 
 	const pi_p4info_t *info = infos[dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
-	p4rule_t *defaultRule = table->getDefaultRule();
+	p4rule_t *defaultRule = p4table_get_default_rule(table);
 	if (defaultRule == NULL) {
-		std::cerr << "No default rule set\n";
+		Logger::error("No default rule set");
 		return PI_STATUS_TARGET_ERROR;
 	}
 
-	return retrieveEntry(info, defaultRule->action, defaultRule->param, table_entry);
+	return retrieveEntry(info, defaultRule->action, defaultRule->params, table_entry);
 }
 
 //! Need to be called after pi_table_default_action_get, once you wish the
 //! memory to be released.
 pi_status_t _pi_table_default_action_done(pi_session_handle_t session_handle, pi_table_entry_t *table_entry) {
 	(void) session_handle;
+	Logger::debug("PI_table_default_action_done");
 
 	if (table_entry->entry_type == PI_ACTION_ENTRY_TYPE_DATA) {
 		pi_action_data_t *action_data = table_entry->entry.action_data;
@@ -353,20 +373,21 @@ pi_status_t _pi_table_default_action_done(pi_session_handle_t session_handle, pi
 //! if entry does not exist.
 pi_status_t _pi_table_entry_delete(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_entry_handle_t entry_handle) {
 	(void) session_handle;
+	Logger::debug("PI_table_entry_delete");
 
 	const pi_p4info_t *info = infos[dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
-	uint32_t status;
-	if ((status = table->deleteRule(entry_handle)) != P4DEV_OK) {
+	uint32_t status = p4table_delete_rule(table, entry_handle);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -378,15 +399,16 @@ pi_status_t _pi_table_entry_delete(pi_session_handle_t session_handle, pi_dev_id
 //! if entry does not exist.
 pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key) {
 	(void) session_handle;
+	Logger::debug("PI_table_entry_delete_wkey");
 
 	const pi_p4info_t *info = infos[dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
@@ -397,12 +419,14 @@ pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_d
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 
-	if ((status = table->findRule(key, index)) != P4DEV_OK) {
+	status = p4table_find_rule(table, key, &index);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 
-	if ((status = table->deleteRule(index)) != P4DEV_OK) {
+	status = p4table_delete_rule(table, index);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -414,15 +438,16 @@ pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_d
 //! entry does not exist.
 pi_status_t _pi_table_entry_modify(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_entry_handle_t entry_handle, const pi_table_entry_t *table_entry) {
 	(void) session_handle;
+	Logger::debug("PI_table_entry_modify");
 
 	const pi_p4info_t *info = infos[dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
@@ -437,7 +462,8 @@ pi_status_t _pi_table_entry_modify(pi_session_handle_t session_handle, pi_dev_id
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 
-	if ((status = table->modifyRule(entry_handle, actionName, params)) != P4DEV_OK)  {
+	status = p4table_modify_rule(table, entry_handle, actionName, params);
+	if (status != P4DEV_OK)  {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -449,15 +475,16 @@ pi_status_t _pi_table_entry_modify(pi_session_handle_t session_handle, pi_dev_id
 //! entry does not exist.
 pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry) {
 	(void)session_handle;
+	Logger::debug("PI_table_entry_modify_wkey");
 
 	const pi_p4info_t *info = infos[dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_id]), tableName);
 	if (table == NULL) {
-		std::cerr << "Cannot get table with name: " << tableName << "\n";
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
@@ -468,7 +495,8 @@ pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_d
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 
-	if ((status = table->findRule(key, index)) != P4DEV_OK) {
+	status = p4table_find_rule(table, key, &index);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -483,7 +511,8 @@ pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_d
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
 
-	if ((status = table->modifyRule(index, actionName, params)) != P4DEV_OK) {
+	status = p4table_modify_rule(table, index, actionName, params);
+	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
 		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
 	}
@@ -494,21 +523,23 @@ pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_d
 //! Retrieve all entries in table as one big blob.
 pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_fetch_res_t *res) {
 	(void) session_handle;
+	Logger::debug("PI_table_entries_fetch");
 
 	const pi_p4info_t *info = infos[dev_id];
 	assert(info != NULL);
 
 	// Retrieve table handle
 	const char *tableName = pi_p4info_table_name_from_id(info, table_id);
-	p4::TablePtr table = devices[dev_id].getTable(tableName);
+	p4table_t *table = p4device_get_table(&(devices[dev_id]), tableName);
 	if (table == NULL) {
+		Logger::error("Cannot get table with name: " + std::string(tableName));
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
 	}
 
+	res->num_entries = p4table_get_size(table);
+	size_t dataSize = 0U;
 	res->p4info = info;
 	res->num_direct_resources = res->num_entries;
-	res->num_entries = table->getSize();
-	size_t dataSize = 0U;
 
 	dataSize += res->num_entries * sizeof(s_pi_entry_handle_t);
 	dataSize += res->num_entries * sizeof(s_pi_action_entry_type_t);
@@ -524,7 +555,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 	auto actionMap = computeActionSizes(info, actionIds, num_actions);
 
 	for (uint32_t i = 0; i < res->num_entries; i++) {
-		auto *rule = table->getRule(i);
+		auto *rule = p4table_get_rule(table, i);
 		
 		dataSize += actionMap.at(rule->action).size;
 		dataSize += sizeof(s_pi_p4_id_t); // Action ID
@@ -540,7 +571,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 	res->entries = data;
 
 	for (uint32_t i = 0; i < res->num_entries; i++) {
-		auto *rule = table->getRule(i);
+		auto *rule = p4table_get_rule(table, i);
 
 		data += emit_entry_handle(data, i);
 		// We don't have priority yet
@@ -550,22 +581,31 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 		while (key != NULL) {
 
 			switch (rule->engine) {
-			case P4ENGINE_TCAM: // ternary
-				std::memcpy(data, key->value, key->val_size);
-				data += key->val_size;
-				std::memcpy(data, key->opt.mask, key->val_size);
-				data += key->val_size;
+			case P4ENGINE_TERNARY:
+				/* NOTE:
+					The endianness was flipped when the rule
+					was written into the device, now we have
+					to flip it back.
+				 */
+				flipEndianness(key->value, key->value_size);
+				std::memcpy(data, key->value, key->value_size);
+				data += key->value_size;
+				flipEndianness(key->opt.mask, key->value_size);
+				std::memcpy(data, key->opt.mask, key->value_size);
+				data += key->value_size;
 				break;
 
 			case P4ENGINE_LPM:
-				std::memcpy(data, key->value, key->val_size);
-				data += key->val_size;
+				flipEndianness(key->value, key->value_size);
+				std::memcpy(data, key->value, key->value_size);
+				data += key->value_size;
 				data += emit_uint32(data, key->opt.prefix_len);
 				break;
 
-			case P4ENGINE_CUCKOO: //Exact
-				std::memcpy(data, key->value, key->val_size);
-				data += key->val_size;
+			case P4ENGINE_EXACT:
+				flipEndianness(key->value, key->value_size);
+				std::memcpy(data, key->value, key->value_size);
+				data += key->value_size;
 				break;
 			}
 
@@ -576,11 +616,9 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 		data += emit_action_entry_type(data, PI_ACTION_ENTRY_TYPE_DATA);
 		auto actionProperties = actionMap.at(rule->action);
 
-		std::cerr << actionProperties.id << " " << actionProperties.size << "\n";
-
 		data += emit_p4_id(data, actionProperties.id);
 		data += emit_uint32(data, actionProperties.size);
-		data = dumpActionData(info, data, actionProperties.id, rule->param);
+		data = dumpActionData(info, data, actionProperties.id, rule->params);
 
 		data += emit_uint32(data, 0);  // properties
 		data += emit_uint32(data, 0);  // TODO(antonin): direct resources
@@ -593,6 +631,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 //! to be released.
 pi_status_t _pi_table_entries_fetch_done(pi_session_handle_t session_handle, pi_table_fetch_res_t *res) {
 	(void) session_handle;
+	Logger::debug("PI_table_entries_fetch_done");
 	
 	delete[] res->entries;
 

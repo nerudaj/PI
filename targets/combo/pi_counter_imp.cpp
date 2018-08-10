@@ -21,8 +21,7 @@
 #include <PI/p4info.h>
 #include <PI/pi.h>
 #include <PI/target/pi_counter_imp.h>
-
-#include <iostream>
+#include <p4dev.h>
 #include "devices.hpp"
 #include "helpers.hpp"
 
@@ -48,10 +47,14 @@ NOTE: This could come in handy later (as defined in  PI/include/PI/pi_counter.h)
 */
 
 pi_status_t _pi_counter_read(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, size_t index, int flags, pi_counter_data_t *counter_data) {
-	(void)session_handle;
-	(void)flags;
+	COMBO_UNUNSED(session_handle);
+	COMBO_UNUNSED(dev_tgt);
+	COMBO_UNUNSED(counter_id);
+	COMBO_UNUNSED(index);
+	COMBO_UNUNSED(flags);
+	COMBO_UNUNSED(counter_data);
 	
-	const pi_p4info_t *info = infos[dev_tgt.dev_id];
+	/*const pi_p4info_t *info = infos[dev_tgt.dev_id];
 	assert(info != NULL);
 	
 	const char *registerName = pi_p4info_counter_name_from_id(info, counter_id);
@@ -59,14 +62,14 @@ pi_status_t _pi_counter_read(pi_session_handle_t session_handle, pi_dev_tgt_t de
 	if (reg == NULL) {
 		std::cerr << "Cannot get register with name: " << registerName << "\n";
 		return PI_STATUS_NETV_INVALID_OBJ_ID;
-	}
+	}*/
 	
 	/*
 	NOTE: Combo card so far supports only registers. To use them, we're pretending that those registers are in fact
 	counters, working in BOTH mode, but the value of packets and bytes is equal to value of the register.
 	Data read from the register are stored in LSB, so MSB based machines should invert them.
 	*/
-	uint8_t data[sizeof(uint64_t)] = {0};
+	/*uint8_t data[sizeof(uint64_t)] = {0};
 	uint32_t status = reg->read(data, sizeof(uint64_t), index);
 	if (status != P4DEV_OK) {
 		p4dev_err_stderr(status);
@@ -80,62 +83,50 @@ pi_status_t _pi_counter_read(pi_session_handle_t session_handle, pi_dev_tgt_t de
 	if (isThisBigEndianSystem()) {
 		flipEndianness(counter_data->bytes);
 		flipEndianness(counter_data->packets);
-	}
+	}*/
 	
-	return PI_STATUS_SUCCESS;
+	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_counter_write(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, size_t index, const pi_counter_data_t *counter_data) {
-	(void)session_handle;
+	COMBO_UNUNSED(session_handle);
+	COMBO_UNUNSED(dev_tgt);
+	COMBO_UNUNSED(counter_id);
+	COMBO_UNUNSED(index);
+	COMBO_UNUNSED(counter_data);
 	
-	const pi_p4info_t *info = infos[dev_tgt.dev_id];
-	assert(info != NULL);
-	
-	const char *registerName = pi_p4info_counter_name_from_id(info, counter_id);
-	p4::RegisterPtr reg = devices[dev_tgt.dev_id].getRegister(registerName);
-	if (reg == NULL) {
-		std::cerr << "Cannot get register with name: " << registerName << "\n";
-		return PI_STATUS_NETV_INVALID_OBJ_ID;
-	}
-	
-	/*
-	See NOTE in the previous method to see why I am doing what I am doing.
-	*/
-	uint32_t status = reg->write((uint8_t *)(&counter_data->bytes), sizeof(uint64_t), index);
-	if (status != P4DEV_OK) {
-		p4dev_err_stderr(status);
-		return pi_status_t(PI_STATUS_TARGET_ERROR + status);
-	}
-	
-	return PI_STATUS_SUCCESS;
+	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_counter_read_direct(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, pi_entry_handle_t entry_handle, int flags, pi_counter_data_t *counter_data) {
-	(void)session_handle;
-	(void)dev_tgt;
-	(void)counter_id;
-	(void)entry_handle;
-	(void)flags;
-	(void)counter_data;
-	return PI_STATUS_SUCCESS;
+	COMBO_UNUNSED(session_handle);
+	COMBO_UNUNSED(dev_tgt);
+	COMBO_UNUNSED(counter_id);
+	COMBO_UNUNSED(entry_handle);
+	COMBO_UNUNSED(flags);
+	COMBO_UNUNSED(counter_data);
+	
+	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_counter_write_direct(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, pi_entry_handle_t entry_handle, const pi_counter_data_t *counter_data) {
-	(void)session_handle;
-	(void)dev_tgt;
-	(void)counter_id;
-	(void)entry_handle;
-	(void)counter_data;
-	return PI_STATUS_SUCCESS;
+	COMBO_UNUNSED(session_handle);
+	COMBO_UNUNSED(dev_tgt);
+	COMBO_UNUNSED(counter_id);
+	COMBO_UNUNSED(entry_handle);
+	COMBO_UNUNSED(counter_data);
+	
+	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_counter_hw_sync(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t counter_id, PICounterHwSyncCb cb, void *cb_cookie) {
-	(void)session_handle;
-	(void)dev_tgt;
-	(void)counter_id;
-	(void)cb;
-	(void)cb_cookie;
-	return PI_STATUS_SUCCESS;
+	COMBO_UNUNSED(session_handle);
+	COMBO_UNUNSED(dev_tgt);
+	COMBO_UNUNSED(counter_id);
+	COMBO_UNUNSED(cb);
+	COMBO_UNUNSED(cb_cookie);
+	
+	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 }

@@ -1,6 +1,8 @@
 #include "devices.hpp"
 
-DeviceArray devices = { p4::Device(), p4::Device() };
+const int MAX_DEVICES = 2;
+
+DeviceArray devices(MAX_DEVICES);
 DeviceInfo infos = { NULL, NULL };
 std::vector<bool> reserved = { false, false };
 
@@ -19,4 +21,5 @@ bool DeviceManager::reserveDevice(std::size_t index) {
 bool DeviceManager::freeDevice(std::size_t index) {
 	reserved[index] = false;
 	infos[index] = NULL;
+	p4device_free(&(devices[index]));
 }
