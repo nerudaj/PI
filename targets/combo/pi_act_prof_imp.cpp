@@ -22,81 +22,82 @@
 #include <PI/int/serialize.h>
 #include <PI/p4info.h>
 #include <PI/pi.h>
+#include "helpers.hpp"
 
 extern "C" {
 
 pi_status_t _pi_act_prof_mbr_create(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t act_prof_id, const pi_action_data_t *action_data, pi_indirect_handle_t *mbr_handle) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_tgt);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(action_data);
-	COMBO_UNUNSED(mbr_handle);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_tgt);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(action_data);
+	COMBO_UNUSED(mbr_handle);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_mbr_delete(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t act_prof_id, pi_indirect_handle_t mbr_handle) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_id);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(mbr_handle);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_id);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(mbr_handle);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_mbr_modify(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t act_prof_id, pi_indirect_handle_t mbr_handle, const pi_action_data_t *action_data) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_id);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(mbr_handle);
-	COMBO_UNUNSED(action_data);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_id);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(mbr_handle);
+	COMBO_UNUSED(action_data);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_grp_create(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t act_prof_id, size_t max_size, pi_indirect_handle_t *grp_handle) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_tgt);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(max_size);
-	COMBO_UNUNSED(grp_handle);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_tgt);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(max_size);
+	COMBO_UNUSED(grp_handle);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_grp_delete(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t act_prof_id, pi_indirect_handle_t grp_handle) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_id);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(grp_handle);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_id);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(grp_handle);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_grp_add_mbr(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t act_prof_id, pi_indirect_handle_t grp_handle, pi_indirect_handle_t mbr_handle) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_id);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(grp_handle);
-	COMBO_UNUNSED(mbr_handle);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_id);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(grp_handle);
+	COMBO_UNUSED(mbr_handle);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_grp_remove_mbr(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t act_prof_id, pi_indirect_handle_t grp_handle, pi_indirect_handle_t mbr_handle) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_id);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(grp_handle);
-	COMBO_UNUNSED(mbr_handle);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_id);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(grp_handle);
+	COMBO_UNUSED(mbr_handle);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_entries_fetch(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t act_prof_id, pi_act_prof_fetch_res_t *res) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_id);
-	COMBO_UNUNSED(act_prof_id);
-	COMBO_UNUNSED(res);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_id);
+	COMBO_UNUSED(act_prof_id);
+	COMBO_UNUSED(res);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_act_prof_entries_fetch_done(pi_session_handle_t session_handle, pi_act_prof_fetch_res_t *res) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(res);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(res);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
