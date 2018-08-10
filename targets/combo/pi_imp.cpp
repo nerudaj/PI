@@ -24,7 +24,7 @@
 #include <p4dev.h>
 #include "devices.hpp"
 #include "logger.hpp"
-#include "helpers.cpp"
+#include "helpers.hpp"
 
 extern "C" {
 
