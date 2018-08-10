@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <cstring>
 
+#define COMBO_UNUSED(item) (void)item
+
 /**
  *  \brief Convert PI match engine enumeration into libp4dev match engine enumeration
  */

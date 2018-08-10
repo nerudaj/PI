@@ -24,17 +24,18 @@
 #include <p4dev.h>
 #include "devices.hpp"
 #include "logger.hpp"
+#include "helpers.cpp"
 
 extern "C" {
 
 pi_status_t _pi_init(void *extra) {
-	(void) extra;
+	COMBO_UNUSED(extra);
 	Logger::debug("PI_init");
 	return PI_STATUS_SUCCESS;
 }
 
 pi_status_t _pi_assign_device(pi_dev_id_t dev_id, const pi_p4info_t *p4info, pi_assign_extra_t *extra) {
-	(void)extra;
+	COMBO_UNUSED(extra);
 	Logger::debug("PI_assign_device - " + std::to_string(dev_id));
 	
 	// Try to reserve device
