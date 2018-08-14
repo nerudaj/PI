@@ -26,15 +26,15 @@
 extern "C" {
 
 pi_status_t _pi_learn_msg_ack(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t learn_id, pi_learn_msg_id_t msg_id) {
-	COMBO_UNUNSED(session_handle);
-	COMBO_UNUNSED(dev_id);
-	COMBO_UNUNSED(learn_id);
-	COMBO_UNUNSED(msg_id);
+	COMBO_UNUSED(session_handle);
+	COMBO_UNUSED(dev_id);
+	COMBO_UNUSED(learn_id);
+	COMBO_UNUSED(msg_id);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 
 pi_status_t _pi_learn_msg_done(pi_learn_msg_t *msg) {
-	COMBO_UNUNSED(msg);
+	COMBO_UNUSED(msg);
 	return PI_STATUS_NOT_IMPLEMENTED_BY_TARGET;
 }
 

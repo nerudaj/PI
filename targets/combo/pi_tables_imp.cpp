@@ -220,7 +220,7 @@ extern "C" {
 //! Adds an entry to a table. Trying to add an entry that already exists should
 //! return an error, unless the \p overwrite flag is set.
 pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry, int overwrite, pi_entry_handle_t *entry_handle) {
-	(void) session_handle; ///< No support for sessions
+	COMBO_UNUSED(session_handle); ///< No support for sessions
 	Logger::debug("PI_table_entry_add");
 	
 	const pi_p4info_t *info = infos[dev_tgt.dev_id];
@@ -266,7 +266,7 @@ pi_status_t _pi_table_entry_add(pi_session_handle_t session_handle, pi_dev_tgt_t
 //! Sets the default entry for a table. Should return an error if the default
 //! entry was statically configured and set as const in the P4 program.
 pi_status_t _pi_table_default_action_set(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id, const pi_table_entry_t *table_entry) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_default_action_set");
 	
 	const pi_p4info_t *info = infos[dev_tgt.dev_id];
@@ -307,7 +307,7 @@ pi_status_t _pi_table_default_action_set(pi_session_handle_t session_handle, pi_
 //! pi_table_default_action_set, to the original default action (as specified in
 //! the P4 program).
 pi_status_t _pi_table_default_action_reset(pi_session_handle_t session_handle, pi_dev_tgt_t dev_tgt, pi_p4_id_t table_id) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_default_action_reset");
 
 	const pi_p4info_t *info = infos[dev_tgt.dev_id];
@@ -332,7 +332,7 @@ pi_status_t _pi_table_default_action_reset(pi_session_handle_t session_handle, p
 
 //! Retrieve the default entry for a table.
 pi_status_t _pi_table_default_action_get(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_entry_t *table_entry) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_default_action_get");
 
 	const pi_p4info_t *info = infos[dev_id];
@@ -358,7 +358,7 @@ pi_status_t _pi_table_default_action_get(pi_session_handle_t session_handle, pi_
 //! Need to be called after pi_table_default_action_get, once you wish the
 //! memory to be released.
 pi_status_t _pi_table_default_action_done(pi_session_handle_t session_handle, pi_table_entry_t *table_entry) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_default_action_done");
 
 	if (table_entry->entry_type == PI_ACTION_ENTRY_TYPE_DATA) {
@@ -372,7 +372,7 @@ pi_status_t _pi_table_default_action_done(pi_session_handle_t session_handle, pi
 //! Delete an entry from a table using the entry handle. Should return an error
 //! if entry does not exist.
 pi_status_t _pi_table_entry_delete(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_entry_handle_t entry_handle) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_entry_delete");
 
 	const pi_p4info_t *info = infos[dev_id];
@@ -398,7 +398,7 @@ pi_status_t _pi_table_entry_delete(pi_session_handle_t session_handle, pi_dev_id
 //! Delete an entry from a table using the match key. Should return an error
 //! if entry does not exist.
 pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_entry_delete_wkey");
 
 	const pi_p4info_t *info = infos[dev_id];
@@ -437,7 +437,7 @@ pi_status_t _pi_table_entry_delete_wkey(pi_session_handle_t session_handle, pi_d
 //! Modify an existing entry using the entry handle. Should return an error if
 //! entry does not exist.
 pi_status_t _pi_table_entry_modify(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_entry_handle_t entry_handle, const pi_table_entry_t *table_entry) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_entry_modify");
 
 	const pi_p4info_t *info = infos[dev_id];
@@ -474,7 +474,7 @@ pi_status_t _pi_table_entry_modify(pi_session_handle_t session_handle, pi_dev_id
 //! Modify an existing entry using the match key. Should return an error if
 //! entry does not exist.
 pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, const pi_match_key_t *match_key, const pi_table_entry_t *table_entry) {
-	(void)session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_entry_modify_wkey");
 
 	const pi_p4info_t *info = infos[dev_id];
@@ -522,7 +522,7 @@ pi_status_t _pi_table_entry_modify_wkey(pi_session_handle_t session_handle, pi_d
 
 //! Retrieve all entries in table as one big blob.
 pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_id_t dev_id, pi_p4_id_t table_id, pi_table_fetch_res_t *res) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_entries_fetch");
 
 	const pi_p4info_t *info = infos[dev_id];
@@ -630,7 +630,7 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 //! Need to be called after a pi_table_entries_fetch, once you wish the memory
 //! to be released.
 pi_status_t _pi_table_entries_fetch_done(pi_session_handle_t session_handle, pi_table_fetch_res_t *res) {
-	(void) session_handle;
+	COMBO_UNUSED(session_handle);
 	Logger::debug("PI_table_entries_fetch_done");
 	
 	delete[] res->entries;
