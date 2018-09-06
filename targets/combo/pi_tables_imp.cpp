@@ -538,8 +538,8 @@ pi_status_t _pi_table_entries_fetch(pi_session_handle_t session_handle, pi_dev_i
 
 	res->num_entries = p4table_get_size(table);
 	size_t dataSize = 0U;
-	res->p4info = info;
-	res->num_direct_resources = res->num_entries;
+	//res->p4info = info;
+	//res->num_direct_resources = 0;
 
 	dataSize += res->num_entries * sizeof(s_pi_entry_handle_t);
 	dataSize += res->num_entries * sizeof(s_pi_action_entry_type_t);
